@@ -26,7 +26,7 @@ pub fn sim<F: FnOnce()>(f: F) -> PathBuf {
 
     std::fs::create_dir_all(dir).unwrap();
 
-    let path = dir.join(hash.to_hex()).with_extension("arrow");
+    let path = dir.join(hash.to_hex().to_string()).with_extension("arrow");
 
     let out = std::fs::File::create(&path).unwrap();
 

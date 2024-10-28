@@ -25,6 +25,7 @@ mod api {
         panic::Location,
         path::{Path, PathBuf},
     };
+    use xshell::{cmd, Shell};
 
     thread_local! {
         static CONTEXT: RefCell<Context> = RefCell::new(Context::default());
@@ -38,7 +39,7 @@ mod api {
     pub use bach::rand;
 
     struct Context {
-        db: duckdb::Connection,
+        sh: Shell,
         title: String,
         out: Vec<u8>,
         capture: Option<&'static Location<'static>>,
@@ -46,12 +47,12 @@ mod api {
 
     impl Default for Context {
         fn default() -> Self {
-            let db = duckdb::Connection::open_in_memory().unwrap();
+            let sh = Shell::new().unwrap();
             Self {
-                db,
+                sh,
                 title: Default::default(),
-                out: vec![],
-                capture: None,
+                out: Default::default(),
+                capture: Default::default(),
             }
         }
     }
@@ -152,7 +153,7 @@ mod api {
         );
 
         with(|ctx| {
-            ctx.db.execute(&sql, []).unwrap();
+            cmd!(ctx.sh, "duckdb -s {sql}").run().unwrap();
         });
 
         out
@@ -194,7 +195,7 @@ mod api {
     pub fn emit<T: core::fmt::Display>(value: T, ext: Option<&str>) -> PathBuf {
         let contents = value.to_string();
         let hash = blake3::hash(contents.as_bytes());
-        let mut out = book_dir().join(hash.to_hex());
+        let mut out = book_dir().join(hash.to_hex().to_string());
         if let Some(ext) = ext {
             out.set_extension(ext);
         }
