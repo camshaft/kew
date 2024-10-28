@@ -26,8 +26,8 @@ where
     N: fmt::Display,
 {
     assert!(
-        behavior.capacity().unwrap_or(usize::MAX) > 2,
-        "capacity must be at least 2"
+        behavior.capacity().unwrap_or(usize::MAX) > 0,
+        "capacity must be at least 1"
     );
 
     let channel = Arc::new(Channel {

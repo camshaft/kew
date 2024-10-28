@@ -6,9 +6,9 @@ fn fifo() {
     title("fifo");
 
     md(r"
-# FIFO
+# First In, First Out
 
-In this chapter we will explore the most basic type of queue: FIFO, or first-in-first-out.
+In this chapter we will explore the most basic type of queue: the first in, first out queue.
     ");
 
     no_latency();
@@ -49,6 +49,9 @@ fn no_latency() {
         client.group("client").spawn();
         server.group("server").spawn();
     });
+
+    md("#### Service Rate");
+    count_graph(&stats, "pop", "");
 
     md("#### Latency");
     latency_graph(&stats, "explicit");
@@ -126,9 +129,7 @@ fn load_shedding_latency() {
         let max_queue_depth = 75;
         capture(false);
 
-        md("");
-        md(r#"\\[ L = \frac{\lambda - \sigma}{\mu} \\]"#);
-        md("");
+        math(r#"L = \frac{\lambda - \sigma}{\mu}"#);
 
         let (client, server) = channel("fifo", Behavior::Reject(max_queue_depth));
 
@@ -182,7 +183,7 @@ fn latency_graph<P: AsRef<Path>>(p: P, reason: &str) {
 fn count_graph<P: AsRef<Path>>(p: P, count: &str, reason: &str) {
     let p = p.as_ref().display();
 
-    let tsv = sql(format_args!(
+    let mut v = format!(
         "
     SELECT
         epoch_ms(timestamp) as timestamp,
@@ -191,9 +192,14 @@ fn count_graph<P: AsRef<Path>>(p: P, count: &str, reason: &str) {
     WHERE
         name == '{count}'
         AND kind = 'count'
-        AND attr_reason = '{reason}'
     "
-    ));
+    );
+
+    if !reason.is_empty() {
+        v.push_str(&format!("  AND attr_reason = '{reason}'"));
+    }
+
+    let tsv = sql(&v);
 
     vega(charts::count(tsv));
 }

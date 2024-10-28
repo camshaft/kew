@@ -9,6 +9,7 @@ arrow-schema = "53"
 bach = { git = "https://github.com/camshaft/bach" }
 blake3 = "1"
 event-listener-strategy = "0.5"
+futures = "0.3"
 parquet = "53"
 pin-project-lite = "0.2"
 xshell = "0.2"

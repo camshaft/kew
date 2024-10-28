@@ -12,8 +12,8 @@ build-dir = "target/book"
 additional-js = ["kew/src/book/vega.js"]
 mathjax-support = true
 
-#[output.pandoc.profile.pdf]
-#output-file = "book.pdf"
-#to = "latex"
+[output.pandoc.profile.pdf]
+output-file = "book.pdf"
+to = "latex"
 
 [preprocessor.vega]

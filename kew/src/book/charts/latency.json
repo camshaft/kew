@@ -1,5 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Latency",
   "data": {
     "url": "URL",
     "format": {
@@ -30,6 +31,11 @@
       "impute": {
         "value": 0
       }
+    },
+    "tooltip": {
+      "field": "value",
+      "aggregate": "mean",
+      "type": "quantitative"
     }
   }
 }

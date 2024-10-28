@@ -18,6 +18,7 @@ pub enum Priority {
 pub enum Behavior {
     #[default]
     Unbounded,
+    Backpressure(usize),
     Wrap(usize),
     Reject(usize),
 }
@@ -26,6 +27,7 @@ impl Behavior {
     pub fn capacity(&self) -> Option<usize> {
         match self {
             Behavior::Unbounded => None,
+            Behavior::Backpressure(cap) => Some(*cap),
             Behavior::Wrap(cap) => Some(*cap),
             Behavior::Reject(cap) => Some(*cap),
         }

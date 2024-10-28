@@ -27,6 +27,11 @@
       "impute": {
         "value": 0
       }
+    },
+    "tooltip": {
+      "field": "value",
+      "aggregate": "sum",
+      "type": "quantitative"
     }
   }
 }
