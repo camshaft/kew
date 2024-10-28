@@ -47,6 +47,12 @@ async function replaceAsync(str, regex, asyncFn) {
 
 const [config, book] = await input();
 
+function compile(json) {
+return    json['$schema'].includes('lite') ?
+        vegaLite.compile(json).spec :
+        json;
+}
+
 async function renderToSvg(json, dir) {
     const logger = {
         level() {
@@ -59,18 +65,14 @@ async function renderToSvg(json, dir) {
             console.error('WARN', ...arguments);
         },
         info() {
-            console.error('INFO', ...arguments);
+            //console.error('INFO', ...arguments);
         },
         debug() {
-            console.error('DEBUG', ...arguments);
+            //console.error('DEBUG', ...arguments);
         },
     };
 
-    const compiled = json['$schema'].includes('lite') ?
-        vegaLite.compile(json) :
-        json;
-
-    const parsed = vega.parse(compiled.spec);
+    const parsed = vega.parse(json);
 
     const loader = {
         sanitize() {
@@ -97,25 +99,27 @@ async function renderToSvg(json, dir) {
 async function renderPath(path) {
     const dir = dirname(path);
     const contents = await readFile(path);
-    const jsonContents = JSON.parse(contents);
-    const svg = await renderToSvg(jsonContents, dir);
+    const compiled = compile(JSON.parse(contents));
+    const svg = await renderToSvg(compiled, dir);
 
-    const out = path.replace(/\.json$/, '.svg');
+    const svgPath = path.replace(/\.json$/, '.svg');
+    await writeFile(svgPath, svg);
 
-    await writeFile(out, svg);
-
-    const url = basename(out);
+    const url = basename(svgPath);
 
     if (config.renderer != 'html') return `![](${url})`;
 
-    const jsonUrl = basename(path);
+    const compiledPath = path.replace(/\.json$/, '.min.json');
+    await writeFile(compiledPath, JSON.stringify(compiled));
+
+    const jsonUrl = basename(compiledPath);
     return `<img data-vega="${jsonUrl}" src="${url}"/>`
 }
 
 for (let section of book.sections) {
     const { Chapter } = section;
     if (Chapter) {
-        Chapter.content = await replaceAsync(Chapter.content, /\#VEGA\(([^\)]+)\)/, async (_match, path) => {
+        Chapter.content = await replaceAsync(Chapter.content, /\#VEGA\(([^\)]+)\)/g, async (_match, path) => {
             return await renderPath(path);
         })
     }

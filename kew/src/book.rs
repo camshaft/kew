@@ -1,16 +1,18 @@
 pub mod charts;
 mod fifo;
+mod introduction;
 mod lifo;
 
 #[test]
 fn summary() {
     use api::*;
 
-    title("SUMMARY.md");
+    title("SUMMARY");
 
     md("# Summary");
-    md("- [Chapter 1 - Intoduction]()");
-    md("- [Chapter 2 - FIFO](./fifo.md)");
+    md("[Introduction](./introduction.md)");
+
+    md("- [FIFO](./fifo.md)");
 
     finish();
 }
@@ -28,7 +30,12 @@ mod api {
         static CONTEXT: RefCell<Context> = RefCell::new(Context::default());
     }
 
-    pub use crate::{book::charts, channel::new as channel, sim::*};
+    pub use crate::{
+        book::charts,
+        channel::{new as channel, Behavior},
+        sim::*,
+    };
+    pub use bach::rand;
 
     struct Context {
         db: duckdb::Connection,
@@ -62,7 +69,6 @@ mod api {
             assert_eq!(start.file(), finish.file());
             assert!(start.line() < finish.line());
 
-            dbg!(start.file());
             let file = Path::new(start.file());
             let file = if file.is_relative() {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -138,7 +144,7 @@ mod api {
         let sql = sql.to_string();
         let hash = blake3::hash(sql.as_bytes());
         let hash = hash.to_hex().to_string();
-        let out = dir().join(hash).with_extension("tsv");
+        let out = book_dir().join(hash).with_extension("tsv");
 
         let sql = format!(
             "COPY ({sql}) TO '{}' (FORMAT CSV, DELIM '\t');",
@@ -164,13 +170,13 @@ mod api {
         })
     }
 
-    fn dir() -> &'static Path {
+    pub fn book_dir() -> &'static Path {
         Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../target/book"))
     }
 
     pub fn finish() {
         with(|ctx| {
-            let dir = dir();
+            let dir = book_dir();
             std::fs::create_dir_all(dir).unwrap();
             let mut path = dir.join(&ctx.title);
             path.set_extension("md");
@@ -182,13 +188,13 @@ mod api {
 
     pub fn vega<T: core::fmt::Display>(value: T) {
         let path = emit(value, Some("json"));
-        md(format_args!("#VEGA({})", path.display()));
+        md(format_args!("\n#VEGA({})\n", path.display()));
     }
 
     pub fn emit<T: core::fmt::Display>(value: T, ext: Option<&str>) -> PathBuf {
         let contents = value.to_string();
         let hash = blake3::hash(contents.as_bytes());
-        let mut out = dir().join(hash.to_hex());
+        let mut out = book_dir().join(hash.to_hex());
         if let Some(ext) = ext {
             out.set_extension(ext);
         }

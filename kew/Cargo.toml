@@ -3,12 +3,16 @@ name = "kew"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["vendored"]
+vendored = ["duckdb/bundled"]
+
 [dependencies]
 arrow-array = "53"
 arrow-schema = "53"
 bach = { git = "https://github.com/camshaft/bach" }
 blake3 = "1"
-duckdb = { version = "1", features = ["bundled"] }
+duckdb = "1"
 event-listener-strategy = "0.5"
 parquet = "53"
 pin-project-lite = "0.2"

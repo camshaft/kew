@@ -19,19 +19,19 @@ use std::sync::{
     Arc, Weak,
 };
 
-pub use ring_deque::{Closed, Priority};
+pub use ring_deque::{Behavior, Closed, Priority};
 
-pub fn new<N, T>(name: N, cap: Option<usize>) -> (Sender<T>, Receiver<T>)
+pub fn new<N, T>(name: N, behavior: Behavior) -> (Sender<T>, Receiver<T>)
 where
     N: fmt::Display,
 {
     assert!(
-        cap.unwrap_or(usize::MAX) >= 1,
+        behavior.capacity().unwrap_or(usize::MAX) > 2,
         "capacity must be at least 2"
     );
 
     let channel = Arc::new(Channel {
-        queue: RingDeque::new(cap, name),
+        queue: RingDeque::new(behavior, name),
         recv_ops: Event::new(),
         sender_count: AtomicUsize::new(1),
         receiver_count: AtomicUsize::new(1),
@@ -255,21 +255,31 @@ pub struct WeakReceiver<T> {
 
 impl<T> WeakReceiver<T> {
     #[inline]
-    pub fn pop_front_if<F>(&self, priority: Priority, f: F) -> Result<Option<T>, Closed>
+    pub fn pop_front_if<F>(
+        &self,
+        priority: Priority,
+        reason: &str,
+        f: F,
+    ) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
         let channel = self.channel.upgrade().ok_or(Closed)?;
-        channel.queue.pop_front_if(priority, f)
+        channel.queue.pop_front_if(priority, reason, f)
     }
 
     #[inline]
-    pub fn pop_back_if<F>(&self, priority: Priority, f: F) -> Result<Option<T>, Closed>
+    pub fn pop_back_if<F>(
+        &self,
+        priority: Priority,
+        reason: &str,
+        f: F,
+    ) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
         let channel = self.channel.upgrade().ok_or(Closed)?;
-        channel.queue.pop_back_if(priority, f)
+        channel.queue.pop_back_if(priority, reason, f)
     }
 }
 

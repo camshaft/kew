@@ -22,10 +22,31 @@ macro_rules! measure {
     ($name:expr, $value:expr, $unit:expr $(, $attr:ident = $attr_v:expr)* $(,)?) => {
         let attrs = "";
         $(
-            let attrs = format_args!("{attrs} {}={}", stringify!($attr), $attr_v);
+            // TODO make this not allocate every time
+            let attrs = format!("{attrs} {}={}", stringify!($attr), $attr_v);
         )*
         log!(
             "kew[{}]measure#{}={}{}{attrs}",
+            bach::time::Instant::now().elapsed_since_start().as_nanos(),
+            $name,
+            $value,
+            $unit,
+        )
+    };
+}
+
+macro_rules! count {
+    ($name:expr, $value:expr) => {
+        count!($name, $value, "");
+    };
+    ($name:expr, $value:expr, $unit:expr $(, $attr:ident = $attr_v:expr)* $(,)?) => {
+        let attrs = "";
+        $(
+            // TODO make this not allocate every time
+            let attrs = format!("{attrs} {}={}", stringify!($attr), $attr_v);
+        )*
+        log!(
+            "kew[{}]count#{}={}{}{attrs}",
             bach::time::Instant::now().elapsed_since_start().as_nanos(),
             $name,
             $value,

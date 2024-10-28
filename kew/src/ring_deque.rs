@@ -14,6 +14,24 @@ pub enum Priority {
     Optional,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Behavior {
+    #[default]
+    Unbounded,
+    Wrap(usize),
+    Reject(usize),
+}
+
+impl Behavior {
+    pub fn capacity(&self) -> Option<usize> {
+        match self {
+            Behavior::Unbounded => None,
+            Behavior::Wrap(cap) => Some(*cap),
+            Behavior::Reject(cap) => Some(*cap),
+        }
+    }
+}
+
 pub struct RingDeque<T> {
     inner: Arc<Mutex<Inner<T>>>,
 }
@@ -29,11 +47,11 @@ impl<T> Clone for RingDeque<T> {
 
 impl<T> RingDeque<T> {
     #[inline]
-    pub fn new<N: core::fmt::Display>(capacity: Option<usize>, name: N) -> Self {
-        let queue = VecDeque::with_capacity(capacity.unwrap_or(64));
+    pub fn new<N: core::fmt::Display>(behavior: Behavior, name: N) -> Self {
+        let queue = VecDeque::with_capacity(behavior.capacity().unwrap_or(64));
         let inner = Inner {
             open: true,
-            has_limit: capacity.is_some(),
+            behavior,
             queue,
             name: name.to_string(),
         };
@@ -46,15 +64,26 @@ impl<T> RingDeque<T> {
         let mut inner = self.lock()?;
 
         let prev = if !inner.has_capacity() {
-            inner.pop_front()
+            if matches!(inner.behavior, Behavior::Reject(_)) {
+                count!("push", 1, "", queue_name = inner.name, reason = "reject");
+                count!(
+                    "push_back",
+                    1,
+                    "",
+                    queue_name = inner.name,
+                    reason = "reject"
+                );
+                return Ok(Some(value));
+            }
+            inner.pop_front("wrap")
         } else {
             None
         };
 
-        inner.queue.push_back((value, Instant::now()));
+        inner.push_back(value);
 
         if prev.is_none() {
-            measure!("queue_len", inner.queue.len());
+            inner.measure_len();
         }
 
         Ok(prev)
@@ -65,15 +94,26 @@ impl<T> RingDeque<T> {
         let mut inner = self.lock()?;
 
         let prev = if !inner.has_capacity() {
-            inner.pop_back()
+            if matches!(inner.behavior, Behavior::Reject(_)) {
+                count!("push", 1, "", queue_name = inner.name, reason = "reject");
+                count!(
+                    "push_front",
+                    1,
+                    "",
+                    queue_name = inner.name,
+                    reason = "reject"
+                );
+                return Ok(Some(value));
+            }
+            inner.pop_back("wrap")
         } else {
             None
         };
 
-        inner.queue.push_front((value, Instant::now()));
+        inner.push_front(value);
 
         if prev.is_none() {
-            measure!("queue_len", inner.queue.len());
+            inner.measure_len();
         }
 
         Ok(prev)
@@ -82,11 +122,16 @@ impl<T> RingDeque<T> {
     #[inline]
     pub fn pop_back(&self) -> Result<Option<T>, Closed> {
         let mut inner = self.lock()?;
-        Ok(inner.pop_back())
+        Ok(inner.pop_back("explicit"))
     }
 
     #[inline]
-    pub fn pop_back_if<F>(&self, priority: Priority, check: F) -> Result<Option<T>, Closed>
+    pub fn pop_back_if<F>(
+        &self,
+        priority: Priority,
+        reason: &str,
+        check: F,
+    ) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
@@ -106,18 +151,23 @@ impl<T> RingDeque<T> {
         if !check(&back.0) {
             return Ok(None);
         }
-    
-        Ok(inner.pop_back())
+
+        Ok(inner.pop_back(reason))
     }
 
     #[inline]
     pub fn pop_front(&self) -> Result<Option<T>, Closed> {
         let mut inner = self.lock()?;
-        Ok(inner.pop_front())
+        Ok(inner.pop_front("explicit"))
     }
 
     #[inline]
-    pub fn pop_front_if<F>(&self, priority: Priority, check: F) -> Result<Option<T>, Closed>
+    pub fn pop_front_if<F>(
+        &self,
+        priority: Priority,
+        reason: &str,
+        check: F,
+    ) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
@@ -138,7 +188,7 @@ impl<T> RingDeque<T> {
             return Ok(None);
         }
 
-        Ok(inner.pop_front())
+        Ok(inner.pop_front(reason))
     }
 
     #[inline]
@@ -170,39 +220,77 @@ impl<T> RingDeque<T> {
 
 struct Inner<T> {
     open: bool,
-    has_limit: bool,
+    behavior: Behavior,
     queue: VecDeque<(T, Instant)>,
     name: String,
 }
 
 impl<T> Inner<T> {
     fn has_capacity(&self) -> bool {
-        !self.has_limit || self.queue.capacity() == self.queue.len()
-    }
-
-    fn pop_back(&mut self) -> Option<T> {
-        let item = self.queue.pop_back().map(|(value, time)| {
-            measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
-            value
-        });
-
-        if item.is_some() {
-            measure!("queue_len", self.queue.len());
+        if let Some(max_cap) = self.behavior.capacity() {
+            max_cap > self.queue.len()
+        } else {
+            true
         }
-
-        item
     }
 
-    fn pop_front(&mut self) -> Option<T> {
+    fn measure_len(&self) {
+        measure!("queue_len", self.queue.len(), "", queue_name = self.name);
+    }
+
+    fn push_front(&mut self, value: T) {
+        count!("push", 1, "", queue_name = self.name);
+        count!("push_front", 1, "", queue_name = self.name);
+
+        self.queue.push_front((value, Instant::now()));
+    }
+
+    fn push_back(&mut self, value: T) {
+        count!("push", 1, "", queue_name = self.name);
+        count!("push_back", 1, "", queue_name = self.name);
+
+        self.queue.push_back((value, Instant::now()));
+    }
+
+    fn pop_front(&mut self, reason: &str) -> Option<T> {
         let item = self.queue.pop_front().map(|(value, time)| {
-            measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
+            measure!(
+                "sojourn_time",
+                time.elapsed().as_nanos(),
+                "ns",
+                reason = reason,
+                queue_name = self.name,
+            );
             value
         });
 
         if item.is_some() {
-            measure!("queue_len", self.queue.len());
+            self.measure_len();
+            count!("pop", 1, "", reason = reason, queue_name = self.name);
+            count!("pop_front", 1, "", reason = reason, queue_name = self.name);
         }
 
         item
     }
-} 
+
+    fn pop_back(&mut self, reason: &str) -> Option<T> {
+        let item = self.queue.pop_back().map(|(value, time)| {
+            measure!(
+                "sojourn_time",
+                time.elapsed().as_nanos(),
+                "ns",
+                reason = reason,
+                queue_name = self.name,
+            );
+            value
+        });
+
+        if item.is_some() {
+            self.measure_len();
+            count!("pop", 1, "", reason = reason, queue_name = self.name);
+            count!("pop_back", 1, "", reason = reason, queue_name = self.name);
+        }
+
+        item
+    }
+}
