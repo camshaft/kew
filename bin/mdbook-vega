@@ -110,10 +110,19 @@ async function renderPath(path) {
     if (config.renderer != 'html') return `![](${url})`;
 
     const compiledPath = path.replace(/\.json$/, '.min.json');
+
+    let site_url = config.config.output.html['site-url'] || '/';
+    if (!site_url.match(/\/$/)) site_url += '/';
+    const resolve = (url) => url.charAt(0) == '/' ? url : `${site_url}${url}`;
+
+    compiled.data.forEach((data) => {
+        data.url = resolve(data.url);
+    })
+
     await writeFile(compiledPath, JSON.stringify(compiled));
 
-    const jsonUrl = basename(compiledPath);
-    return `<img data-vega="${jsonUrl}" src="${url}"/>`
+    const jsonUrl = resolve(basename(compiledPath));
+    return `<img data-vega="${jsonUrl}" src="${resolve(url)}"/>`
 }
 
 for (let section of book.sections) {

@@ -39,6 +39,8 @@ jobs:
       - uses: camshaft/rust-cache@v1
 
       - name: Build book
+        env:
+          MDBOOK_OUTPUT__HTML__SITE_url: "/kew"
         run: cargo xtask build
 
       - name: Setup Pages
