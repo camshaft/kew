@@ -1,11 +1,20 @@
+use core::ops::Deref;
 use std::io;
 
 #[inline]
-pub fn parse<R: io::BufRead>(r: R) -> Parser<R> {
-    Parser {
-        line: String::new(),
-        lines: r.lines(),
+pub fn parse<R, E>(r: R, mut on_event: E) -> io::Result<()>
+where
+    R: io::BufRead,
+    E: FnMut(Event),
+{
+    for line in r.lines() {
+        let line = line?;
+        if let Some(event) = Event::parse(&line) {
+            on_event(event);
+        }
     }
+
+    Ok(())
 }
 
 #[derive(Clone, Debug)]
@@ -17,7 +26,7 @@ pub struct Event<'a> {
 }
 
 impl<'a> Event<'a> {
-    fn parse(v: &'a str) -> Option<Self> {
+    pub fn parse(v: &'a str) -> Option<Self> {
         let v = v.expect("kew[")?;
         let (timestamp, v) = v.split_once_ws(']')?;
         let timestamp = timestamp.parse().ok()?;
@@ -41,7 +50,8 @@ impl<'a> Event<'a> {
 trait StrExt {
     fn expect<'a>(&'a self, lit: &str) -> Option<&'a str>;
     fn one_of<'a, T>(&'a self, matches: &[(&str, fn() -> T)]) -> Option<(T, &'a str)>;
-    fn split_once_ws<'a>(&'a self, pat: char) -> Option<(&'a str, &'a str)>;
+    fn split_once_ws(&self, pat: char) -> Option<(&str, &str)>;
+    fn take_numeric<T: core::str::FromStr>(&self) -> Option<(T, &str)>;
 }
 
 impl StrExt for str {
@@ -64,19 +74,29 @@ impl StrExt for str {
         None
     }
 
-    fn split_once_ws<'a>(&'a self, pat: char) -> Option<(&'a str, &'a str)> {
+    fn split_once_ws(&self, pat: char) -> Option<(&str, &str)> {
         let (a, b) = self.split_once(pat)?;
         let a = a.trim_end();
         let b = b.trim_start();
+        Some((a, b))
+    }
+
+    fn take_numeric<T: core::str::FromStr>(&self) -> Option<(T, &str)> {
+        let index = self
+            .char_indices()
+            .find_map(|(idx, c)| if !c.is_numeric() { Some(idx) } else { None })
+            .unwrap_or(self.len());
+        let (a, b) = self.split_at(index);
+        let a = a.parse().ok()?;
         Some((a, b))
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct Data<'a> {
-    name: &'a str,
-    value: u64,
-    unit: &'a str,
+    pub name: &'a str,
+    pub value: u64,
+    pub unit: &'a str,
 }
 
 impl<'a> Data<'a> {
@@ -87,17 +107,18 @@ impl<'a> Data<'a> {
         } else {
             (v, "")
         };
-        let (value, unit) = value.split_once(char::is_numeric)?;
-        let value = value.parse().ok()?;
+        let (value, unit) = value.take_numeric()?;
 
         let data = Data { name, value, unit };
         Some((data, v))
     }
 }
 
+pub type Attr<'a> = (&'a str, &'a str);
+
 #[derive(Clone, Debug)]
 pub struct Attrs<'a> {
-    attrs: Vec<(&'a str, &'a str)>,
+    attrs: Vec<Attr<'a>>,
 }
 
 impl<'a> Attrs<'a> {
@@ -110,7 +131,27 @@ impl<'a> Attrs<'a> {
                 attrs.push((key, value));
             }
         }
+        attrs.sort_by(|(a, _), (b, _)| a.cmp(b));
+        let mut prev: Option<&str> = None;
+        let prev = &mut prev;
+        attrs.retain(move |(key, _)| {
+            // extend the lifetime of the str
+            let key = unsafe { core::mem::transmute::<&str, &str>(*key) };
+            if let Some(prev) = core::mem::replace(prev, Some(key)) {
+                key != prev
+            } else {
+                true
+            }
+        });
         Some(Self { attrs })
+    }
+}
+
+impl<'a> Deref for Attrs<'a> {
+    type Target = [Attr<'a>];
+
+    fn deref(&self) -> &Self::Target {
+        &self.attrs
     }
 }
 
@@ -121,31 +162,12 @@ pub enum Kind {
     Measure,
 }
 
-pub struct Parser<R: io::BufRead> {
-    line: String,
-    lines: io::Lines<R>,
-}
-
-impl<R: io::BufRead> Parser<R> {
-    fn event(&mut self) -> Option<io::Result<Event>> {
-        loop {
-            match self.lines.next() {
-                None => return None,
-                Some(Err(err)) => return Some(Err(err)),
-                Some(Ok(v)) if v.is_empty() => continue,
-                Some(Ok(v)) => {
-                    self.line = v;
-                }
-            };
-
-            let res = Event::parse(&self.line);
-
-            if res.is_none() {
-                drop(res);
-                continue;
-            }
-
-            return res.map(Ok);
+impl Kind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Kind::Count => "count",
+            Kind::Gauge => "gauge",
+            Kind::Measure => "measure",
         }
     }
 }
