@@ -171,7 +171,7 @@ mod api {
     }
 
     pub fn book_dir() -> &'static Path {
-        Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../target/book"))
+        Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../target/book-src"))
     }
 
     pub fn finish() {

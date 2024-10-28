@@ -2,8 +2,11 @@
 authors = ["Cameron Bytheway"]
 language = "en"
 multilingual = false
-src = "target/book"
+src = "target/book-src"
 title = "Kew"
+
+[build]
+build-dir = "target/book"
 
 [output.html]
 additional-js = ["kew/src/book/vega.js"]
