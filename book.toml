@@ -1,0 +1,15 @@
+[book]
+authors = ["Cameron Bytheway"]
+language = "en"
+multilingual = false
+src = "target/book"
+title = "Kew"
+
+#[output.html]
+#additional-js = [
+#    "https://cdn.jsdelivr.net/npm/vega@5",
+#    "https://cdn.jsdelivr.net/npm/vega-lite@5",
+#    "https://cdn.jsdelivr.net/npm/vega-embed@6",
+#]
+
+[preprocessor.vega]

@@ -1,5 +1,19 @@
+pub mod charts;
 mod fifo;
 mod lifo;
+
+#[test]
+fn summary() {
+    use api::*;
+
+    title("SUMMARY.md");
+
+    md("# Summary");
+    md("- [Chapter 1 - Intoduction]()");
+    md("- [Chapter 2 - FIFO](./fifo.md)");
+
+    finish();
+}
 
 mod api {
     use std::{
@@ -14,13 +28,25 @@ mod api {
         static CONTEXT: RefCell<Context> = RefCell::new(Context::default());
     }
 
-    pub use crate::{channel::new as channel, sim::*};
+    pub use crate::{book::charts, channel::new as channel, sim::*};
 
-    #[derive(Default)]
     struct Context {
+        db: duckdb::Connection,
         title: String,
         out: Vec<u8>,
         capture: Option<&'static Location<'static>>,
+    }
+
+    impl Default for Context {
+        fn default() -> Self {
+            let db = duckdb::Connection::open_in_memory().unwrap();
+            Self {
+                db,
+                title: Default::default(),
+                out: vec![],
+                capture: None,
+            }
+        }
     }
 
     impl Context {
@@ -36,7 +62,17 @@ mod api {
             assert_eq!(start.file(), finish.file());
             assert!(start.line() < finish.line());
 
-            let file = std::fs::File::open(start.file()).unwrap();
+            dbg!(start.file());
+            let file = Path::new(start.file());
+            let file = if file.is_relative() {
+                Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .parent()
+                    .unwrap()
+                    .join(file)
+            } else {
+                file.to_path_buf()
+            };
+            let file = std::fs::File::open(file).unwrap();
             let file = std::io::BufReader::new(file);
 
             let skip = start.line() as usize;
@@ -69,6 +105,12 @@ mod api {
                 writeln!(out, "{line}").unwrap();
             }
 
+            // trim trailing ws
+            while out.last().filter(|v| **v == b'\n').is_some() {
+                out.pop();
+            }
+            out.push(b'\n');
+
             writeln!(self.out).unwrap();
             writeln!(self.out, "```rust").unwrap();
             self.out.extend(out);
@@ -89,7 +131,25 @@ mod api {
     }
 
     pub fn md<T: core::fmt::Display>(v: T) {
-        with(|ctx| write!(ctx.out, "{v}").unwrap());
+        with(|ctx| writeln!(ctx.out, "{v}").unwrap());
+    }
+
+    pub fn sql<T: core::fmt::Display>(sql: T) -> PathBuf {
+        let sql = sql.to_string();
+        let hash = blake3::hash(sql.as_bytes());
+        let hash = hash.to_hex().to_string();
+        let out = dir().join(hash).with_extension("tsv");
+
+        let sql = format!(
+            "COPY ({sql}) TO '{}' (FORMAT CSV, DELIM '\t');",
+            out.display()
+        );
+
+        with(|ctx| {
+            ctx.db.execute(&sql, []).unwrap();
+        });
+
+        out
     }
 
     #[track_caller]
@@ -105,7 +165,7 @@ mod api {
     }
 
     fn dir() -> &'static Path {
-        Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/target/book"))
+        Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../target/book"))
     }
 
     pub fn finish() {
@@ -120,12 +180,16 @@ mod api {
         })
     }
 
-    pub fn emit_file<P: AsRef<Path>>(path: P) -> PathBuf {
-        let path = path.as_ref();
-        let contents = std::fs::read(path).unwrap();
-        let hash = blake3::hash(&contents);
+    pub fn vega<T: core::fmt::Display>(value: T) {
+        let path = emit(value, Some("json"));
+        md(format_args!("#VEGA({})", path.display()));
+    }
+
+    pub fn emit<T: core::fmt::Display>(value: T, ext: Option<&str>) -> PathBuf {
+        let contents = value.to_string();
+        let hash = blake3::hash(contents.as_bytes());
         let mut out = dir().join(hash.to_hex());
-        if let Some(ext) = path.extension() {
+        if let Some(ext) = ext {
             out.set_extension(ext);
         }
 

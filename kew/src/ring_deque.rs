@@ -33,7 +33,7 @@ impl<T> RingDeque<T> {
         let queue = VecDeque::with_capacity(capacity.unwrap_or(64));
         let inner = Inner {
             open: true,
-            has_cap: capacity.is_some(),
+            has_limit: capacity.is_some(),
             queue,
             name: name.to_string(),
         };
@@ -45,16 +45,17 @@ impl<T> RingDeque<T> {
     pub fn push_back(&self, value: T) -> Result<Option<T>, Closed> {
         let mut inner = self.lock()?;
 
-        let prev = if inner.queue.capacity() == inner.queue.len() {
-            inner.queue.pop_front().map(|(value, time)| {
-                measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
-                value
-            })
+        let prev = if !inner.has_capacity() {
+            inner.pop_front()
         } else {
             None
         };
 
         inner.queue.push_back((value, Instant::now()));
+
+        if prev.is_none() {
+            measure!("queue_len", inner.queue.len());
+        }
 
         Ok(prev)
     }
@@ -63,16 +64,17 @@ impl<T> RingDeque<T> {
     pub fn push_front(&self, value: T) -> Result<Option<T>, Closed> {
         let mut inner = self.lock()?;
 
-        let prev = if inner.queue.capacity() == inner.queue.len() {
-            inner.queue.pop_back().map(|(value, time)| {
-                measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
-                value
-            })
+        let prev = if !inner.has_capacity() {
+            inner.pop_back()
         } else {
             None
         };
 
         inner.queue.push_front((value, Instant::now()));
+
+        if prev.is_none() {
+            measure!("queue_len", inner.queue.len());
+        }
 
         Ok(prev)
     }
@@ -80,10 +82,7 @@ impl<T> RingDeque<T> {
     #[inline]
     pub fn pop_back(&self) -> Result<Option<T>, Closed> {
         let mut inner = self.lock()?;
-        Ok(inner.queue.pop_back().map(|(value, time)| {
-            measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
-            value
-        }))
+        Ok(inner.pop_back())
     }
 
     #[inline]
@@ -104,23 +103,17 @@ impl<T> RingDeque<T> {
             return Ok(None);
         };
 
-        if check(&back.0) {
-            Ok(inner.queue.pop_back().map(|(value, time)| {
-                measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
-                value
-            }))
-        } else {
-            Ok(None)
+        if !check(&back.0) {
+            return Ok(None);
         }
+    
+        Ok(inner.pop_back())
     }
 
     #[inline]
     pub fn pop_front(&self) -> Result<Option<T>, Closed> {
         let mut inner = self.lock()?;
-        Ok(inner.queue.pop_front().map(|(value, time)| {
-            measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
-            value
-        }))
+        Ok(inner.pop_front())
     }
 
     #[inline]
@@ -141,14 +134,11 @@ impl<T> RingDeque<T> {
             return Ok(None);
         };
 
-        if check(&back.0) {
-            Ok(inner.queue.pop_front().map(|(value, time)| {
-                measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
-                value
-            }))
-        } else {
-            Ok(None)
+        if !check(&back.0) {
+            return Ok(None);
         }
+
+        Ok(inner.pop_front())
     }
 
     #[inline]
@@ -180,7 +170,39 @@ impl<T> RingDeque<T> {
 
 struct Inner<T> {
     open: bool,
-    has_cap: bool,
+    has_limit: bool,
     queue: VecDeque<(T, Instant)>,
     name: String,
 }
+
+impl<T> Inner<T> {
+    fn has_capacity(&self) -> bool {
+        !self.has_limit || self.queue.capacity() == self.queue.len()
+    }
+
+    fn pop_back(&mut self) -> Option<T> {
+        let item = self.queue.pop_back().map(|(value, time)| {
+            measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
+            value
+        });
+
+        if item.is_some() {
+            measure!("queue_len", self.queue.len());
+        }
+
+        item
+    }
+
+    fn pop_front(&mut self) -> Option<T> {
+        let item = self.queue.pop_front().map(|(value, time)| {
+            measure!("sojourn_time", time.elapsed().as_nanos(), "ns");
+            value
+        });
+
+        if item.is_some() {
+            measure!("queue_len", self.queue.len());
+        }
+
+        item
+    }
+} 

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "url": "URL",
+    "format": {
+      "type": "tsv"
+    }
+  },
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "timestamp",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "value",
+      "aggregate": "mean",
+      "type": "quantitative"
+    }
+  }
+}

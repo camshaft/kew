@@ -1,0 +1,10 @@
+{
+  "name": "kew",
+  "version": "0.0.0",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "vega": "^5.30.0",
+    "vega-lite": "^5.21.0"
+  }
+}
