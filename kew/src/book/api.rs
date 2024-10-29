@@ -8,7 +8,10 @@ use std::{
 use xshell::{cmd, Shell};
 
 pub mod cytoscape;
+pub mod vega;
+
 pub use cytoscape::render as cytoscape;
+pub use vega::render as vega;
 
 thread_local! {
     static CONTEXT: RefCell<Context> = RefCell::new(Context::default());
@@ -131,7 +134,7 @@ pub fn md<T: core::fmt::Display>(v: T) {
 }
 
 pub fn sql_tsv<T: core::fmt::Display>(q: T) -> PathBuf {
-    sql(q, "json", "FORMAT CSV, DELIMITER '\t'")
+    sql(q, "tsv", "FORMAT CSV, DELIMITER '\t'")
 }
 
 pub fn sql_json<T: core::fmt::Display>(q: T) -> PathBuf {
@@ -179,11 +182,6 @@ pub fn finish() {
 
         file.write_all(&ctx.out).unwrap();
     })
-}
-
-pub fn vega<T: core::fmt::Display>(value: T) {
-    let path = emit(value, Some("json"));
-    md(format_args!("\n#VEGA({})\n", path.display()));
 }
 
 pub fn emit<T: core::fmt::Display>(value: T, ext: Option<&str>) -> PathBuf {

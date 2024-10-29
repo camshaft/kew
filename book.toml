@@ -9,14 +9,11 @@ title = "Kew"
 build-dir = "target/book"
 
 [output.html]
-additional-js = [
-    "target/book-src/cytoscape.js",
-    "target/book-src/vega.js",
-]
+additional-js = ["target/book-src/js/index.js"]
 mathjax-support = true
 
 #[output.pandoc.profile.pdf]
 #output-file = "book.pdf"
 #to = "latex"
 
-[preprocessor.vega]
+[preprocessor.kew]

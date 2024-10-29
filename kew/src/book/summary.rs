@@ -30,18 +30,3 @@ fn summary() {
 
     finish();
 }
-
-#[test]
-fn js() {
-    macro_rules! js {
-        ($name:literal) => {
-            let file = emit(include_str!($name), Some("js"));
-            let target = book_dir().join($name);
-            let _ = std::fs::remove_file(&target);
-            std::os::unix::fs::symlink(file, target).unwrap();
-        };
-    }
-
-    js!("cytoscape.js");
-    js!("vega.js");
-}

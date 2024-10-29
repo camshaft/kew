@@ -7,6 +7,7 @@ fn main() {
 
 fn build(sh: &Shell) {
     cmd!(sh, "npm install").run().unwrap();
+    cmd!(sh, "npm run-script build").run().unwrap();
 
     cmd!(sh, "cargo test").run().unwrap();
 

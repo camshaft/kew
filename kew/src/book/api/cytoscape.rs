@@ -4,11 +4,10 @@ pub fn render<P: AsRef<Path>>(p: P) {
     let p = p.as_ref();
     let elements = element_json(p);
 
-    // TODO make this a plugin
     md("");
     md(format_args!(
-        "<div data-cytoscape data-elements=\"{}\"></div>",
-        elements.file_name().unwrap().to_str().unwrap()
+        "\n!CYTOSCAPE{{\"elements\":{:?}}}\n",
+        elements.display()
     ));
     md("");
 }
@@ -21,7 +20,8 @@ pub fn element_json<P: AsRef<Path>>(p: P) -> PathBuf {
     SELECT DISTINCT
         'nodes' AS \"group\",
         to_json({{
-            id: 'actor_' || attr_actor
+            id: 'actor_' || attr_actor,
+            label: attr_actor
         }}) AS data,
         to_json([ 'actor' ]) AS classes
     FROM read_parquet('{p}')
@@ -33,7 +33,8 @@ pub fn element_json<P: AsRef<Path>>(p: P) -> PathBuf {
     SELECT DISTINCT
         'nodes' AS \"group\",
         to_json({{
-            id: 'queue_' || attr_queue_name
+            id: 'queue_' || attr_queue_name,
+            label: attr_queue_name
         }}) AS data,
         to_json([ 'queue' ]) AS classes
     FROM read_parquet('{p}')
@@ -52,7 +53,7 @@ pub fn element_json<P: AsRef<Path>>(p: P) -> PathBuf {
     FROM read_parquet('{p}')
     WHERE
         name == 'push'
-    
+
     UNION
 
     SELECT DISTINCT
