@@ -73,7 +73,7 @@ async function renderToSvg(json, dir) {
   const parsed = vega.parse(json);
 
   const loader = {
-    sanitize() {},
+    sanitize() { },
     load: async function load(file) {
       const resolved = join(dir, file);
       return await readFile(resolved);
@@ -117,7 +117,7 @@ async function renderPath(path) {
   const resolve = (url) => (url.charAt(0) == "/" ? url : `${site_url}${url}`);
 
   compiled.data.forEach((data) => {
-    data.url = resolve(data.url);
+    if (data.url) data.url = resolve(data.url);
   });
 
   await writeFile(compiledPath, JSON.stringify(compiled));

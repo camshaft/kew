@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 arrow-array = "53"
 arrow-schema = "53"
-bach = { git = "https://github.com/camshaft/bach" }
+bach.workspace = true
 blake3 = "1"
 event-listener-strategy = "0.5"
 futures = "0.3"

@@ -19,7 +19,7 @@ use std::sync::{
     Arc, Weak,
 };
 
-pub use ring_deque::{Behavior, Closed, Priority};
+pub use ring_deque::{Behavior, Closed};
 
 pub fn new<N, T>(name: N, behavior: Behavior) -> (Sender<T>, Receiver<T>)
 where
@@ -255,31 +255,21 @@ pub struct WeakReceiver<T> {
 
 impl<T> WeakReceiver<T> {
     #[inline]
-    pub fn pop_front_if<F>(
-        &self,
-        priority: Priority,
-        reason: &str,
-        f: F,
-    ) -> Result<Option<T>, Closed>
+    pub fn pop_front_if<F>(&self, reason: &str, f: F) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
         let channel = self.channel.upgrade().ok_or(Closed)?;
-        channel.queue.pop_front_if(priority, reason, f)
+        channel.queue.pop_front_if(reason, f)
     }
 
     #[inline]
-    pub fn pop_back_if<F>(
-        &self,
-        priority: Priority,
-        reason: &str,
-        f: F,
-    ) -> Result<Option<T>, Closed>
+    pub fn pop_back_if<F>(&self, reason: &str, f: F) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
         let channel = self.channel.upgrade().ok_or(Closed)?;
-        channel.queue.pop_back_if(priority, reason, f)
+        channel.queue.pop_back_if(reason, f)
     }
 }
 

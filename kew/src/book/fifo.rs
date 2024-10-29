@@ -164,7 +164,7 @@ fn load_shedding_latency() {
 fn latency_graph<P: AsRef<Path>>(p: P, reason: &str) {
     let p = p.as_ref().display();
 
-    let tsv = sql(format_args!(
+    let tsv = sql_tsv(format_args!(
         "
     SELECT
         epoch_ms(timestamp) as timestamp,
@@ -199,7 +199,7 @@ fn count_graph<P: AsRef<Path>>(p: P, count: &str, reason: &str) {
         v.push_str(&format!("  AND attr_reason = '{reason}'"));
     }
 
-    let tsv = sql(&v);
+    let tsv = sql_tsv(&v);
 
     vega(charts::count(tsv));
 }

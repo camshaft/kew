@@ -7,13 +7,6 @@ use std::{
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Closed;
 
-#[derive(Clone, Copy, Debug, Default)]
-pub enum Priority {
-    #[default]
-    Required,
-    Optional,
-}
-
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Behavior {
     #[default]
@@ -67,13 +60,21 @@ impl<T> RingDeque<T> {
 
         let prev = if !inner.has_capacity() {
             if matches!(inner.behavior, Behavior::Reject(_)) {
-                count!("push", 1, "", queue_name = inner.name, reason = "reject");
+                count!(
+                    "push",
+                    1,
+                    "",
+                    queue_name = inner.name,
+                    reason = "reject",
+                    actor = actor_name(),
+                );
                 count!(
                     "push_back",
                     1,
                     "",
                     queue_name = inner.name,
-                    reason = "reject"
+                    reason = "reject",
+                    actor = actor_name(),
                 );
                 return Ok(Some(value));
             }
@@ -97,13 +98,21 @@ impl<T> RingDeque<T> {
 
         let prev = if !inner.has_capacity() {
             if matches!(inner.behavior, Behavior::Reject(_)) {
-                count!("push", 1, "", queue_name = inner.name, reason = "reject");
+                count!(
+                    "push",
+                    1,
+                    "",
+                    queue_name = inner.name,
+                    reason = "reject",
+                    actor = actor_name(),
+                );
                 count!(
                     "push_front",
                     1,
                     "",
                     queue_name = inner.name,
-                    reason = "reject"
+                    reason = "reject",
+                    actor = actor_name(),
                 );
                 return Ok(Some(value));
             }
@@ -128,23 +137,11 @@ impl<T> RingDeque<T> {
     }
 
     #[inline]
-    pub fn pop_back_if<F>(
-        &self,
-        priority: Priority,
-        reason: &str,
-        check: F,
-    ) -> Result<Option<T>, Closed>
+    pub fn pop_back_if<F>(&self, reason: &str, check: F) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
-        let inner = match priority {
-            Priority::Required => Some(self.lock()?),
-            Priority::Optional => self.try_lock()?,
-        };
-
-        let Some(mut inner) = inner else {
-            return Ok(None);
-        };
+        let mut inner = self.lock()?;
 
         let Some(back) = inner.queue.back() else {
             return Ok(None);
@@ -164,23 +161,11 @@ impl<T> RingDeque<T> {
     }
 
     #[inline]
-    pub fn pop_front_if<F>(
-        &self,
-        priority: Priority,
-        reason: &str,
-        check: F,
-    ) -> Result<Option<T>, Closed>
+    pub fn pop_front_if<F>(&self, reason: &str, check: F) -> Result<Option<T>, Closed>
     where
         F: FnOnce(&T) -> bool,
     {
-        let inner = match priority {
-            Priority::Required => Some(self.lock()?),
-            Priority::Optional => self.try_lock()?,
-        };
-
-        let Some(mut inner) = inner else {
-            return Ok(None);
-        };
+        let mut inner = self.lock()?;
 
         let Some(back) = inner.queue.front() else {
             return Ok(None);
@@ -206,18 +191,6 @@ impl<T> RingDeque<T> {
         ensure!(inner.open, Err(Closed));
         Ok(inner)
     }
-
-    #[inline]
-    fn try_lock(&self) -> Result<Option<std::sync::MutexGuard<Inner<T>>>, Closed> {
-        use std::sync::TryLockError;
-        let inner = match self.inner.try_lock() {
-            Ok(inner) => inner,
-            Err(TryLockError::WouldBlock) => return Ok(None),
-            Err(TryLockError::Poisoned(_)) => return Err(Closed),
-        };
-        ensure!(inner.open, Err(Closed));
-        Ok(Some(inner))
-    }
 }
 
 struct Inner<T> {
@@ -241,15 +214,27 @@ impl<T> Inner<T> {
     }
 
     fn push_front(&mut self, value: T) {
-        count!("push", 1, "", queue_name = self.name);
-        count!("push_front", 1, "", queue_name = self.name);
+        count!("push", 1, "", queue_name = self.name, actor = actor_name(),);
+        count!(
+            "push_front",
+            1,
+            "",
+            queue_name = self.name,
+            actor = actor_name(),
+        );
 
         self.queue.push_front((value, Instant::now()));
     }
 
     fn push_back(&mut self, value: T) {
-        count!("push", 1, "", queue_name = self.name);
-        count!("push_back", 1, "", queue_name = self.name);
+        count!("push", 1, "", queue_name = self.name, actor = actor_name(),);
+        count!(
+            "push_back",
+            1,
+            "",
+            queue_name = self.name,
+            actor = actor_name(),
+        );
 
         self.queue.push_back((value, Instant::now()));
     }
@@ -262,14 +247,29 @@ impl<T> Inner<T> {
                 "ns",
                 reason = reason,
                 queue_name = self.name,
+                actor = actor_name(),
             );
             value
         });
 
         if item.is_some() {
             self.measure_len();
-            count!("pop", 1, "", reason = reason, queue_name = self.name);
-            count!("pop_front", 1, "", reason = reason, queue_name = self.name);
+            count!(
+                "pop",
+                1,
+                "",
+                reason = reason,
+                queue_name = self.name,
+                actor = actor_name(),
+            );
+            count!(
+                "pop_front",
+                1,
+                "",
+                reason = reason,
+                queue_name = self.name,
+                actor = actor_name(),
+            );
         }
 
         item
@@ -283,16 +283,35 @@ impl<T> Inner<T> {
                 "ns",
                 reason = reason,
                 queue_name = self.name,
+                actor = actor_name(),
             );
             value
         });
 
         if item.is_some() {
             self.measure_len();
-            count!("pop", 1, "", reason = reason, queue_name = self.name);
-            count!("pop_back", 1, "", reason = reason, queue_name = self.name);
+            count!(
+                "pop",
+                1,
+                "",
+                reason = reason,
+                queue_name = self.name,
+                actor = actor_name(),
+            );
+            count!(
+                "pop_back",
+                1,
+                "",
+                reason = reason,
+                queue_name = self.name,
+                actor = actor_name(),
+            );
         }
 
         item
     }
+}
+
+fn actor_name() -> String {
+    bach::group::current().name()
 }

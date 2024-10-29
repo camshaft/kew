@@ -49,13 +49,13 @@ fn first_example() {
                     latency.sleep().await;
                 }
             }
-            .group("client")
+            .group(name)
             .spawn();
 
             recv
         };
 
-        let client_a = client("client_a", 150, 3, 200.ms());
+        let client_a = client("client_a", 300, 3, 200.ms());
         let client_b = client("client_b", 10, 1000, 2.ms());
 
         async move {
@@ -84,6 +84,8 @@ fn first_example() {
         run_time();
     });
 
+    cytoscape(&stats);
+
     md("## Client A");
     count_graph(&stats, "pop", "client_a");
     md("## Client B");
@@ -109,7 +111,7 @@ fn count_graph<P: AsRef<Path>>(p: P, count: &str, queue_name: &str) {
         v.push_str(&format!("  AND attr_queue_name = '{queue_name}'"));
     }
 
-    let tsv = sql(&v);
+    let tsv = sql_tsv(&v);
 
     vega(charts::count(tsv));
 }

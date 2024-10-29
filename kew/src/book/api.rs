@@ -7,6 +7,9 @@ use std::{
 };
 use xshell::{cmd, Shell};
 
+pub mod cytoscape;
+pub use cytoscape::render as cytoscape;
+
 thread_local! {
     static CONTEXT: RefCell<Context> = RefCell::new(Context::default());
 }
@@ -127,16 +130,21 @@ pub fn md<T: core::fmt::Display>(v: T) {
     with(|ctx| writeln!(ctx.out, "{v}").unwrap());
 }
 
-pub fn sql<T: core::fmt::Display>(sql: T) -> PathBuf {
+pub fn sql_tsv<T: core::fmt::Display>(q: T) -> PathBuf {
+    sql(q, "json", "FORMAT CSV, DELIMITER '\t'")
+}
+
+pub fn sql_json<T: core::fmt::Display>(q: T) -> PathBuf {
+    sql(q, "json", "FORMAT JSON, ARRAY")
+}
+
+pub fn sql<T: core::fmt::Display>(sql: T, ext: &str, config: &str) -> PathBuf {
     let sql = sql.to_string();
     let hash = blake3::hash(sql.as_bytes());
     let hash = hash.to_hex().to_string();
-    let out = book_dir().join(hash).with_extension("tsv");
+    let out = book_dir().join(hash).with_extension(ext);
 
-    let sql = format!(
-        "COPY ({sql}) TO '{}' (FORMAT CSV, DELIM '\t');",
-        out.display()
-    );
+    let sql = format!("COPY ({sql}) TO '{}' ({config});", out.display());
 
     with(|ctx| {
         cmd!(ctx.sh, "duckdb -s {sql}").run().unwrap();

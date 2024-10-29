@@ -4,6 +4,8 @@ let embed = "https://cdn.jsdelivr.net/npm/vega-embed@6";
 import(vega)
   .then(() => import(embed))
   .then(() => {
+    return;
+
     document.querySelectorAll("[data-vega]").forEach((el) => {
       const url = el.dataset.vega;
       const container = document.createElement("div");

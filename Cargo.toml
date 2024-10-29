@@ -4,3 +4,7 @@ members = [
     "xtask",
 ]
 resolver = "2"
+
+[workspace.dependencies]
+bach = { git = "https://github.com/camshaft/bach" }
+# bach = { path = "../bach/bach" }
