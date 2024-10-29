@@ -45,6 +45,7 @@ jobs:
       - name: Build book
         env:
           MDBOOK_OUTPUT__HTML__SITE_url: "/kew"
+          NODE_ENV: "production"
         run: cargo xtask build
 
       - name: Setup Pages
