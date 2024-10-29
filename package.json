@@ -5,10 +5,11 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "rollup -c"
+    "build": "./node_modules/@rollup/wasm-node/dist/bin/rollup -c"
   },
   "dependencies": {
     "@rollup/plugin-json": "^6.1.0",
+    "@rollup/wasm-node": "^4",
     "cytoscape": "^3",
     "cytoscape-dagre": "^2.5.0",
     "vega": "^5.30.0",
@@ -19,7 +20,6 @@
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-swc": "^0.4.0",
-    "@swc/core": "^1.7.40",
-    "rollup": "^4"
+    "@swc/core": "^1.7.40"
   }
 }
