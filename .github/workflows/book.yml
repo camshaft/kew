@@ -37,7 +37,7 @@ jobs:
           crate: mdbook
 
       - name: Install DuckDB
-        uses: opt-nc/setup-duckdb-action@v1.0.9
+        uses: opt-nc/setup-duckdb-action@v1.0.10
 
       - name: Setup cache
         uses: camshaft/rust-cache@v1
