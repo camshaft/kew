@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 arrow-array = "53"
-arrow-schema = "53"
+arrow-schema = "54"
 bach.workspace = true
 blake3 = "1"
 event-listener-strategy = "0.5"
