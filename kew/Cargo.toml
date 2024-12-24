@@ -10,6 +10,6 @@ bach.workspace = true
 blake3 = "1"
 event-listener-strategy = "0.5"
 futures = "0.3"
-parquet = "53"
+parquet = "54"
 pin-project-lite = "0.2"
 xshell = "0.2"
