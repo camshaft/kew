@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-arrow-array = "53"
+arrow-array = "54"
 arrow-schema = "53"
 bach.workspace = true
 blake3 = "1"
