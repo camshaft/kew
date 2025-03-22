@@ -1,7 +1,6 @@
 use crate::parser::Event;
 use arrow_array::{
-    builder::{StringDictionaryBuilder, TimestampNanosecondBuilder, UInt64Builder},
-    types::{UInt16Type, UInt32Type, UInt8Type},
+    builder::{StringBuilder, TimestampNanosecondBuilder, UInt64Builder},
     ArrayRef, RecordBatch,
 };
 use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
@@ -9,6 +8,14 @@ use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
 };
+
+fn new_string_builder(capacity: usize) -> StringBuilder {
+    let mut values = StringBuilder::with_capacity(0, capacity);
+    for _ in 0..capacity {
+        values.append_null();
+    }
+    values
+}
 
 #[derive(Default)]
 pub struct Writer {
@@ -34,10 +41,7 @@ impl Writer {
                 continue;
             }
 
-            let mut values = StringDictionaryBuilder::new();
-            if self.count > 0 {
-                values.append_nulls(self.count);
-            }
+            let mut values = new_string_builder(self.count);
             values.append_value(value);
             self.values.attrs.insert(key.to_string(), values);
         }
@@ -77,17 +81,18 @@ impl Writer {
 }
 
 fn string_dict(key: DataType) -> DataType {
-    DataType::Dictionary(Box::new(key), Box::new(DataType::Utf8))
+    //DataType::Dictionary(Box::new(key), Box::new(DataType::Utf8))
+    DataType::Utf8
 }
 
 #[derive(Default)]
 struct Values {
     timestamp: TimestampNanosecondBuilder,
-    name: StringDictionaryBuilder<UInt32Type>,
+    name: StringBuilder,
     value: UInt64Builder,
-    unit: StringDictionaryBuilder<UInt16Type>,
-    kind: StringDictionaryBuilder<UInt8Type>,
-    attrs: HashMap<String, StringDictionaryBuilder<UInt32Type>>,
+    unit: StringBuilder,
+    kind: StringBuilder,
+    attrs: HashMap<String, StringBuilder>,
 }
 
 impl Values {

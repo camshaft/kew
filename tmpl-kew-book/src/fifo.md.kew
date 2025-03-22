@@ -1,0 +1,51 @@
+# FIFO
+
+This is a test.
+
+```js id=fifo sim
+sim({
+  run_time: 1,
+  actors: [
+    {
+      id: "sender",
+      name: "Sender",
+      operations: [
+        {
+          loop: [
+            {
+              push_back: {
+                queue: "queue",
+              },
+            },
+            {
+              sleep: 0.001,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "server",
+      name: "Server",
+      operations: [
+        {
+          loop: [
+            {
+              pop_front: { queue: "queue" },
+            },
+            {
+              sleep: 0.002,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+    queues: [
+        {
+            name: "queue",
+      type: { prefer_old: 10 },
+        }
+    ],
+})
+```

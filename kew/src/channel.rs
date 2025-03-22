@@ -278,6 +278,8 @@ easy_wrapper! {
     #[derive(Debug)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     pub struct Recv<'a, T>(RecvInner<'a, T> => Result<T, Closed>);
+
+    #[cfg(not(target_family = "wasm"))]
     pub(crate) wait();
 }
 

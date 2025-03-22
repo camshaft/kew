@@ -1,0 +1,27 @@
+{
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "clean": "rimraf src/.observablehq/cache",
+    "build": "observable build --debug",
+    "dev": "observable preview --no-open",
+    "deploy": "observable deploy",
+    "observable": "observable"
+  },
+  "dependencies": {
+    "@observablehq/framework": "^1.12.0",
+    "apache-arrow": "^18.0.0",
+    "d3-dsv": "^3.0.1",
+    "d3-time-format": "^4.1.0",
+    "duckdb": "^1.1.1",
+    "duckdb-async": "^1.1.1",
+    "kew-wasm": "../kew-wasm/pkg",
+    "parquet-wasm": "^0.6.1"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

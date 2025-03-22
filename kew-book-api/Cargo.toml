@@ -1,0 +1,21 @@
+[package]
+name = "kew-book-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+arrow-ipc.workspace = true
+bach.workspace = true
+datafusion.workspace = true
+kew.workspace = true
+kew-book-macros.workspace = true
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+console_error_panic_hook = { version = "0.1", optional = true }
+getrandom = { version = "0.2", features = ["js"] }
+wasm-bindgen.workspace = true
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+blake3 = "1"
+once_cell = "1"
+xshell = "0.2"

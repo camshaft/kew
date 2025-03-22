@@ -1,23 +1,18 @@
 {
   "name": "kew",
-  "version": "0.0.0",
-  "author": "",
-  "license": "MIT",
   "type": "module",
-  "scripts": {
-    "build": "./node_modules/@rollup/wasm-node/dist/bin/rollup -c"
+  "version": "0.0.0",
+  "description": "",
+  "directories": {
+    "lib": "lib"
   },
   "dependencies": {
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/wasm-node": "^4",
-    "cytoscape": "^3",
-    "cytoscape-dagre": "^2.5.0",
-    "vega": "^5.30.0",
-    "vega-embed": "^6.26.0",
-    "vega-lite": "^5.21.0",
-    "@rollup/plugin-commonjs": "^28.0.1",
-    "@rollup/plugin-node-resolve": "^15.3.0",
-    "@rollup/plugin-swc": "^0.4.0",
-    "@swc/core": "^1.7.40"
-  }
+    "@observablehq/plot": "^0.6.16",
+    "apache-arrow": "^18.0.0",
+    "d3": "^7.9.0",
+    "jsdom": "^25.0.1"
+  },
+  "scripts": {},
+  "author": "",
+  "license": "MIT"
 }

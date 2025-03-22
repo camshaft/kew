@@ -3,13 +3,18 @@ name = "kew"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["parquet"]
+parquet = []
+
 [dependencies]
-arrow-array = "53"
-arrow-schema = "53"
+arrow-array = { version = "53", default-features = false }
+arrow-ipc = { version = "53", default-features = false }
+arrow-schema = { version = "53", default-features = false }
 bach.workspace = true
-blake3 = "1"
+#blake3 = "1"
 event-listener-strategy = "0.5"
 futures = "0.3"
-parquet = "53"
+#parquet = { version = "53", default-features = false, features = ["arrow"] }
 pin-project-lite = "0.2"
-xshell = "0.2"
+#xshell = "0.2"
