@@ -1,0 +1,15 @@
+[package]
+name = "fifo"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+path = "sim.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+base.workspace = true
+
+[dev-dependencies]
+base = { workspace = true, features = ["test"] }

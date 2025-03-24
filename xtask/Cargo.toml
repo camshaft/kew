@@ -1,7 +1,11 @@
 [package]
 name = "xtask"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 xshell = "0.2"
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ['cfg(trick_rust_analyzer_into_highlighting_interpolated_bits)']

@@ -1,0 +1,105 @@
+#!/usr/bin/env node
+
+import { createServer } from "vite";
+import { readFile, cp, rm, mkdir, writeFile } from "node:fs/promises";
+
+let root = `${import.meta.dirname}/..`;
+
+const target = process.argv[2] ?? "static";
+
+const siteTitle = "Kew";
+
+const outDir = `${root}/target/book`;
+const targetDir = `${outDir}/${target}`;
+
+const entry = `/src/targets/${target}.tsx`;
+
+const server = await createServer();
+server.pluginContainer.buildStart({});
+
+// use the web template to get the correct assets
+const template = await readFile(`${outDir}/web/index.html`, "utf-8");
+
+await rm(targetDir, { recursive: true, force: true });
+await mkdir(targetDir);
+await cp(`${outDir}/web/assets`, `${targetDir}/assets`, {
+  recursive: true,
+});
+
+const { render, routes } = await server.ssrLoadModule(entry);
+
+let mdOut = "";
+
+if (target == "md") {
+  const date = new Date().toISOString().split("T")[0];
+  mdOut += `
+---
+title: ${siteTitle}
+subtitle: A study of queues and their behavior.
+author: Cameron Bytheway
+date: ${date}
+toc: true
+numbersections: true
+include-before:
+- '\`\\newpage{}\`{=latex}'
+---
+
+`;
+}
+
+await renderRoutes(routes);
+
+await server.close();
+
+if (target == "md") {
+  await writeFile(`${targetDir}/index.md`, mdOut);
+}
+
+async function renderRoutes(routes) {
+  if (!routes) return;
+  for (const child of routes) {
+    await renderRoute(child);
+  }
+}
+
+async function renderRoute({ meta, children }) {
+  if (!meta) return;
+
+  let { fullPath, title } = meta;
+  console.log(`Rendering ${fullPath}`);
+
+  title = title ? `${siteTitle} - ${title}` : siteTitle;
+
+  let url = fullPath;
+  if (!url.startsWith("/kew")) url = `/kew${url}`;
+
+  const args = {
+    url,
+    title,
+  };
+
+  const rendered = await render(args);
+
+  rendered.url = fullPath;
+
+  if (target == "static") {
+    await renderHtml(rendered);
+  } else if (target == "md") {
+    await renderMd(rendered);
+  }
+
+  await renderRoutes(children);
+}
+
+async function renderHtml({ url, head, html }) {
+  const out = template
+    .replace(`<!--app-head-->`, head ?? "")
+    .replace(`<!--app-html-->`, html ?? "");
+
+  await mkdir(`${targetDir}${url}`, { recursive: true });
+  await writeFile(`${targetDir}${url}/index.html`, out);
+}
+
+async function renderMd({ html }) {
+  mdOut += `${html}\n`;
+}
