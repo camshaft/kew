@@ -8,8 +8,11 @@ dev-js:
 dev-rs:
     @cargo watch --watch='crates' --watch='xtask' -x 'xtask'
 
+dev-npm:
+    @cargo watch --watch='package.json' -s 'npm i'
+
 [group('build')]
-build: check-tsc build-crates build-web build-static build-md build-pdf
+build: check-tsc build-crates build-web build-static build-md
 
 [group('build')]
 build-crates:
@@ -21,11 +24,11 @@ build-web:
 
 [group('build')]
 build-static:
-    @VITE_SSR_TARGET=static bin/render static
+    @NODE_ENV=development VITE_SSR_TARGET=static bin/render static
 
 [group('build')]
 build-md:
-    @VITE_SSR_TARGET=md bin/render md
+    @NODE_ENV=development VITE_SSR_TARGET=md bin/render md
 
 [group('build')]
 build-pdf:
@@ -33,11 +36,14 @@ build-pdf:
     @pandoc target/book/md/index.md --output target/book/pdf/kew.pdf
 
 [group('build')]
-build-ghp: build
+build-ghp: npmi build
     @rm -rf target/book/ghp
     @cp -r target/book/static target/book/ghp
     @touch target/book/ghp/.nojekyll
-    @cp target/book/pdf/kew.pdf target/book/ghp/kew.pdf
+    #@cp target/book/pdf/kew.pdf target/book/ghp/kew.pdf
+
+npmi:
+    npm i
 
 [group('checks')]
 check-tsc:

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import * as routerDom from "react-router-dom";
 import { pathToRoute } from "./routes.tsx";
 
 let currentListener = {
@@ -8,6 +8,8 @@ let currentListener = {
 
 export default function KeyBindings({ onEscape }: { onEscape: () => void }) {
   if (import.meta.env.SSR) return;
+
+  const { useNavigate, useLocation } = routerDom;
 
   const navigate = useNavigate();
   const location = useLocation();

@@ -3,8 +3,7 @@ members = ["crates/*", "xtask"]
 resolver = "3"
 
 [workspace.dependencies]
-# bach = { git = "https://github.com/camshaft/bach" }
-bach = { path = "../bach/bach" }
+bach = { version = "0.0.12" }
 base = { path = "crates/base" }
 wasm-bindgen = { version = "=0.2.100" }
 

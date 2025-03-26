@@ -126,29 +126,24 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
     let entry = format!("./{name}/build.js");
     wl!("// @ts-nocheck");
     w!("import * as wasm from {entry:?};");
+    wl!("import { Sim as __Sim } from '~/data/sim.ts';");
 
     let use_memo = "_useMemo";
     let use_effect = "_useEffect";
     let use_state = "_useState";
+    let use_ref = "_useRef";
     let throttle = "throttle";
 
     w!(
-        "import {{ useMemo as {use_memo}, useEffect as {use_effect}, useState as {use_state} }} from 'react';"
+        "import {{ useMemo as {use_memo}, useEffect as {use_effect}, useState as {use_state}, useRef as {use_ref} }} from 'react';"
     );
     w!("import {{ throttle as {throttle} }} from 'throttle-debounce';");
     w!();
 
+    wl!("export type SimTransform<T> = (result: __Sim | null) => T;");
+
     for cls in classes {
         let Cls { name, properties } = cls;
-
-        w!("export class {name} extends wasm.{name} {{");
-        // w!("  run: (");
-        // for Property { name, ty } in &properties {
-        //     w!("    {name}: {ty},");
-        // }
-        // wl!("  ) => void");
-        wl!("}");
-        w!();
 
         w!("export interface {name}Props {{");
         for Property { name, ty } in &properties {
@@ -157,11 +152,15 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
         wl!("}");
         w!();
 
-        w!("export function use{name}(props: {name}Props): {name} {{");
+        w!("export function use{name}<T>(props: {name}Props, transform: SimTransform<T>): T {{");
         indent = "  ";
 
         {
-            w!("const [_gen, _set_gen] = {use_state}(0);");
+            w!("let [_output, _set_output] = {use_state}(null);");
+
+            wl!("if (_output == null) _output = transform(_output)");
+
+            w!("const transformCb = {use_ref}(transform);");
 
             w!("const _instance = {use_memo}(() => {{");
             w!("  const i = new wasm.{name}() as {name};");
@@ -177,10 +176,8 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
                 w!("    this.{name} = {name};");
             }
             wl!("    const _ret = _run.call(this);");
-            wl!("    _gen += 1;");
-            wl!("    _set_gen(_gen);");
-            // w!("    console.log('run', _gen, {name:?});");
-            wl!("    return _ret;");
+            wl!("    const transformed = transformCb.current(_ret);");
+            wl!("    _set_output(transformed);");
             wl!("  }}");
             w!("  return i;");
             wl!("}, []);");
@@ -202,22 +199,12 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
             wl!("]);");
             w!();
 
-            w!("return _instance;")
+            w!("return _output;")
         }
 
         indent = "";
         wl!("}");
         w!();
-
-        // w!("export function {name}<T>({{ children: _children }}: {name}Props<T>): T {{");
-        // indent = "  ";
-        // {
-        //     w!("const [instance, props] = use{name}();");
-        //     wl!("return _children(instance, props);")
-        // }
-
-        // indent = "";
-        // wl!("}");
     }
 
     out

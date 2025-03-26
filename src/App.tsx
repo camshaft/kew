@@ -59,7 +59,7 @@ export default function App() {
           </div>
           {/* TODO bottom nav */}
           <div className="row-start-5 grid lg:col-start-3">
-            <div className="px-2 pt-10 pb-24">
+            <div className="px-2 pt-10 pb-10">
               <div className="mx-auto flex w-full flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 max-w-2xl lg:max-w-5xl">
                 <div>{/* TODO scheme selector */}</div>
                 <div className="flex flex-col gap-4 text-sm/6 text-gray-700 sm:flex-row sm:gap-2 sm:pr-4 dark:text-gray-400">

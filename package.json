@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines" : { 
+    "node" : ">=20.0.0 <21.0.0"
+  },
   "scripts": {
     "check-tsc": "tsc",
     "dev": "vite",
@@ -12,19 +15,19 @@
   },
   "dependencies": {
     "@adobe/remark-gridtables": "^3.0.12",
+    "@heroicons/react": "^2.2",
     "@mdx-js/rollup": "^3.1.0",
     "@observablehq/plot": "^0.6.17",
     "@tailwindcss/vite": "^4.0.15",
     "clsx": "^2.1.1",
+    "motion": "^12.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.4.0",
     "react-router-dom": "^7.4.0",
     "remark-gfm": "^4.0.1",
     "tailwindcss": "^4.0.15",
-    "throttle-debounce": "^5.0.2"
-  },
-  "devDependencies": {
+    "throttle-debounce": "^5.0.2",
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.11",
     "@types/react": "^19.0.10",

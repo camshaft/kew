@@ -31,6 +31,7 @@ export default defineConfig({
     alias: {
       "@": "/src/components",
       $: "/src/sims",
+      "~": "/src",
     },
   },
   server: {

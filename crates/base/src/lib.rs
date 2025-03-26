@@ -1,4 +1,4 @@
-use std::time::Duration;
+pub mod model;
 
 pub mod macro_support {
     pub use bach::{
@@ -14,6 +14,8 @@ pub mod macro_support {
     pub use wasm_bindgen_test;
     #[cfg(feature = "test")]
     pub use wasm_bindgen_test::*;
+
+    pub use super::model::queue::Ext;
 }
 
 #[macro_export]
@@ -22,16 +24,15 @@ macro_rules! def {
         #[allow(non_snake_case)]
         pub mod $name {
             use $crate::macro_support::*;
+            use super::*;
 
             #[allow(non_camel_case_types)]
             #[wasm_bindgen(inspectable)]
-            #[derive(Clone, Default)]
+            #[derive(Default)]
             pub struct $name {
                 $(
                     pub $arg: $arg_t,
                 )*
-                final_time: Option<Duration>,
-                // TODO outputs
             }
 
             #[wasm_bindgen]
@@ -41,12 +42,8 @@ macro_rules! def {
                     Self::default()
                 }
 
-                pub fn final_time(&self) -> f32 {
-                    self.final_time.map_or(0.0, |v| v.as_secs_f32())
-                }
-
-                pub fn _run(&mut self) {
-                    self.final_time = $crate::run(|| {
+                pub fn _run(&self) -> $crate::model::Sim {
+                    $crate::run(|| {
                         let $name {
                             $(
                                 $arg,
@@ -59,7 +56,7 @@ macro_rules! def {
                         )*
 
                         $body
-                    });
+                    })
                 }
             }
 
@@ -72,11 +69,15 @@ macro_rules! def {
     };
 }
 
-pub fn run<F: FnOnce()>(f: F) -> Option<Duration> {
+pub fn run<F: FnOnce()>(f: F) -> model::Sim {
     #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
 
-    let mut sim = bach::environment::default::Runtime::default();
-    sim.run(f);
-    Some(sim.elapsed())
+    let (scope, _final_time) = model::scope::with(Default::default(), || {
+        let mut sim = bach::environment::default::Runtime::default();
+        sim.run(f);
+        sim.elapsed()
+    });
+
+    scope.finish()
 }
