@@ -7,11 +7,13 @@ import { useLaggingValue } from "./use-lagging-value";
 export interface Props {
   states: Model[];
   idx: number;
+  showAge?: boolean;
 }
 
-export default function QueueVis({ states, idx }: Props) {
+export default function QueueVis({ states, idx, showAge }: Props) {
   idx = Math.max(idx, 0);
   idx = Math.min(idx, states.length - 1);
+  showAge = !!showAge;
 
   const prevIdx = useLaggingValue(idx);
 
@@ -20,6 +22,8 @@ export default function QueueVis({ states, idx }: Props) {
   // TODO change the direction of animation
   //   console.log(isForward);
 
+  if (!states.length) return false;
+
   const state = states[idx];
 
   const cols = state.queues.length;
@@ -27,7 +31,7 @@ export default function QueueVis({ states, idx }: Props) {
   const children: any = [];
 
   state.queues.forEach((queue, idx) =>
-    children.push(...Queue({ queue, column: idx + 1 }))
+    children.push(...Queue({ queue, column: idx + 1, state, showAge }))
   );
 
   return (
@@ -42,48 +46,80 @@ export default function QueueVis({ states, idx }: Props) {
   );
 }
 
-function Queue({ queue, column }: { queue: m.Queue; column: number }) {
+function Queue({
+  queue,
+  column,
+  state,
+  showAge,
+}: {
+  queue: m.Queue;
+  column: number;
+  state: Model;
+  showAge: boolean;
+}) {
   const children = [];
 
   children.push(
     <div
       key={`q${queue.id}`}
-      className={clsx(
-        " p-4 row-start-1 row-span-1 rounded-lg text-center select-none",
-        {
-          "bg-amber-600": queue.isGroup,
-          "bg-blue-400": !queue.isGroup,
-        }
-      )}
+      className="z-10"
       style={{ gridColumnStart: column, gridColumnEnd: column + 1 }}
     >
-      {queue.name}
+      <QueueLabel queue={queue} showAge={showAge} />
     </div>
   );
 
-  queue.items.forEach((id, idx) =>
-    children.push(Item({ id, column, row: idx + 2 }))
+  queue.items.forEach((item, idx) =>
+    children.push(Item({ item, column, row: idx + 2, state, showAge }))
   );
 
   return children;
 }
 
+function QueueLabel({ queue, showAge }: { queue: m.Queue; showAge: boolean }) {
+  return (
+    <div
+      className={clsx(
+        "p-4 row-start-1 row-span-1 rounded text-center select-none",
+        {
+          "bg-amber-600": queue.isGroup,
+          "bg-blue-400": !queue.isGroup,
+          "grid grid-cols-2 items-center pl-8 pr-8": showAge,
+        }
+      )}
+    >
+      <div className={showAge ? "text-left" : "text-center"}>
+        Item {queue.id + 1}
+      </div>
+      {showAge && (
+        <div className="text-right text-xs">
+          Avg Sojourn: {formatNumber(queue.items.sojournTimes.average)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Item({
-  id,
+  item,
   column,
   row,
+  state,
+  showAge,
 }: {
-  id: number;
+  item: m.Item;
   column: number;
   row: number;
+  state: Model;
+  showAge: boolean;
 }) {
   return (
     <motion.div
-      key={`i${id}`}
-      exit={{ transform: "translateX(100px)", opacity: 0, height: 0 }}
-      initial={{ transform: "translateX(-100px)", opacity: 0, height: 0 }}
-      animate={{ transform: "translateX(0px)", opacity: 1, height: "auto" }}
-      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+      key={`i${item.id}`}
+      exit={{ transform: "translateY(-100px)", opacity: 0, height: 0 }}
+      initial={{ transform: "translateY(-100px)", opacity: 0, height: 0 }}
+      animate={{ transform: "translateY(0px)", opacity: 1, height: "auto" }}
+      transition={{ type: "tween", duration: 0.2 }}
       layout
       style={{
         gridColumnStart: column,
@@ -92,9 +128,45 @@ function Item({
         gridRowEnd: row + 1,
       }}
     >
-      <div className="bg-emerald-500 rounded-4xl p-4 text-center select-none">
-        Item {id + 1}
-      </div>
+      <ItemLabel item={item} state={state} showAge={showAge} />
     </motion.div>
   );
+}
+
+function ItemLabel({
+  item,
+  state,
+  showAge,
+}: {
+  item: m.Item;
+  state: Model;
+  showAge: boolean;
+}) {
+  return (
+    <div
+      className={clsx(
+        "ml-4 mr-4 px-3 py-3 select-none rounded-lg bg-emerald-500 text-gray-900 dark:text-white",
+        {
+          "grid grid-cols-2 items-center": showAge,
+        }
+      )}
+    >
+      <div className={showAge ? "text-left" : "text-center"}>
+        Item {item.id + 1}
+      </div>
+      {showAge && (
+        <div className="text-right text-xs">
+          Age: {formatNumber(item.lifetime(state.seconds))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatNumber(v: number): string {
+  return v.toLocaleString(undefined, {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
 }

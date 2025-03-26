@@ -20,7 +20,7 @@ pub mod macro_support {
 
 #[macro_export]
 macro_rules! def {
-    (pub fn $name:ident($($arg:ident: $arg_t:ty),* $(,)?) $body:block) => {
+    (pub fn $name:ident($( $(#[default = $default:expr])? $arg:ident: $arg_t:ty),* $(,)?) $body:block) => {
         #[allow(non_snake_case)]
         pub mod $name {
             use $crate::macro_support::*;
@@ -28,11 +28,25 @@ macro_rules! def {
 
             #[allow(non_camel_case_types)]
             #[wasm_bindgen(inspectable)]
-            #[derive(Default)]
             pub struct $name {
                 $(
                     pub $arg: $arg_t,
                 )*
+            }
+
+            impl Default for $name {
+                #[allow(unused_assignments)]
+                fn default() -> Self {
+                    $(
+                        let mut $arg = <$arg_t>::default();
+                        $(
+                            $arg = $default;
+                        )?
+                    )*
+                    Self {
+                        $($arg),*
+                    }
+                }
             }
 
             #[wasm_bindgen]

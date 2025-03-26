@@ -42,6 +42,10 @@ export class Sim {
     }
     this.steps[stepId].apply(model);
     model.step = stepId;
+    model.lifetimes.finish();
+    model.queues.forEach((q) => {
+      q.items.finish(model.seconds);
+    });
     return model;
   }
 }
@@ -98,10 +102,14 @@ export class PushFront implements Event {
   }
 
   public apply(model: Model): void {
+    let item;
     if (this.source !== undefined) {
-      model.queues[this.source].items.pop(this.value);
+      item = model.queues[this.source].items.pop(this.value, model.seconds);
+    } else {
+      item = new m.Item(this.value);
+      item.entryTime = model.seconds;
     }
-    model.queues[this.destination].items.pushFront(this.value);
+    model.queues[this.destination].items.pushFront(item, model.seconds);
   }
 }
 
@@ -117,10 +125,14 @@ export class PushBack implements Event {
   }
 
   public apply(model: Model): void {
+    let item;
     if (this.source !== undefined) {
-      model.queues[this.source].items.pop(this.value);
+      item = model.queues[this.source].items.pop(this.value, model.seconds);
+    } else {
+      item = new m.Item(this.value);
+      item.entryTime = model.seconds;
     }
-    model.queues[this.destination].items.pushBack(this.value);
+    model.queues[this.destination].items.pushBack(item, model.seconds);
   }
 }
 
@@ -134,6 +146,8 @@ export class Pop implements Event {
   }
 
   public apply(model: Model): void {
-    model.queues[this.queue].items.pop(this.value);
+    const item = model.queues[this.queue].items.pop(this.value, model.seconds);
+    const lifetime = item.lifetime(model.seconds);
+    model.lifetimes.record(new m.StatEntry(model.seconds, lifetime, item.id));
   }
 }

@@ -1,6 +1,5 @@
+use super::{scope, Id, Pop, PushBack, PushFront};
 use core::fmt;
-
-use super::{scope, Id, Pop, PushBack};
 
 #[derive(Debug)]
 pub struct Item {
@@ -36,11 +35,19 @@ impl Item {
         });
     }
 
-    pub fn on_push(&self, queue_id: Id) {
+    pub fn on_push_back(&self, queue_id: Id) {
         scope::borrow_mut_with(|scope| {
             let group_id = scope.queue_id_for_current_group();
             let event = PushBack::new(Some(group_id), queue_id, self.id);
             scope.current_step().on_push_back(event);
+        });
+    }
+
+    pub fn on_push_front(&self, queue_id: Id) {
+        scope::borrow_mut_with(|scope| {
+            let group_id = scope.queue_id_for_current_group();
+            let event = PushFront::new(Some(group_id), queue_id, self.id);
+            scope.current_step().on_push_front(event);
         });
     }
 }

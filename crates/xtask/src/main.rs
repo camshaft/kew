@@ -147,7 +147,7 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
 
         w!("export interface {name}Props {{");
         for Property { name, ty } in &properties {
-            w!("  {name}: {ty};");
+            w!("  {name}?: {ty};");
         }
         wl!("}");
         w!();
@@ -169,11 +169,11 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
             w!("  i.run = {throttle}(500, run);");
             wl!("  function run(");
             for Property { name, ty } in &properties {
-                w!("    {name}: {ty}, ");
+                w!("    {name}: {ty} | undefined, ");
             }
             wl!("  ) {{");
             for Property { name, .. } in &properties {
-                w!("    this.{name} = {name};");
+                w!("    if (typeof {name} !== 'undefined') this.{name} = {name};");
             }
             wl!("    const _ret = _run.call(this);");
             wl!("    const transformed = transformCb.current(_ret);");
