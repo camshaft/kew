@@ -89,7 +89,7 @@ function QueueLabel({ queue, showAge }: { queue: m.Queue; showAge: boolean }) {
       )}
     >
       <div className={showAge ? "text-left" : "text-center"}>
-        Item {queue.id + 1}
+        {queue.name}
       </div>
       {showAge && (
         <div className="text-right text-xs">
