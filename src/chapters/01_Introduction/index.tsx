@@ -17,6 +17,7 @@ export default function () {
   const [mode, setMode] = useState<"FIFO" | "LIFO">("FIFO");
   const [backpressure, setBackpressure] = useState(true);
   const [showAge, setShowAge] = useState(false);
+  const [prefer_recent, setPreferNew] = useState(false);
   const [idx, _setIdx] = useState(0);
   const [playing, setPlaying] = useState(true);
 
@@ -29,6 +30,7 @@ export default function () {
       consumption_time,
       backpressure,
       lifo: mode == "LIFO",
+      prefer_recent,
     },
     (sim) => {
       return sim?.states() || [];
@@ -107,21 +109,29 @@ export default function () {
             >
               Consumption Time
             </Slider>
-            <div className="grid grid-cols-3 gap-4">
-              <Toggle value={backpressure} onChange={setBackpressure}>
-                Backpressure
-              </Toggle>
-              <Toggle value={showAge} onChange={setShowAge}>
-                Show Age
-              </Toggle>
-              <Toggle
-                offLabel="FIFO"
-                value={mode === "LIFO"}
-                onChange={(v) => setMode(v ? "LIFO" : "FIFO")}
-              >
-                LIFO
-              </Toggle>
-            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-4">
+            <Toggle value={backpressure} onChange={setBackpressure}>
+              Backpressure
+            </Toggle>
+            <Toggle
+              offLabel="FIFO"
+              value={mode === "LIFO"}
+              onChange={(v) => setMode(v ? "LIFO" : "FIFO")}
+            >
+              LIFO
+            </Toggle>
+            <Toggle value={showAge} onChange={setShowAge}>
+              Show Age
+            </Toggle>
+            <Toggle
+              offLabel="Oldest"
+              value={prefer_recent}
+              onChange={setPreferNew}
+            >
+              Newest
+            </Toggle>
           </div>
 
           <Player

@@ -9,6 +9,7 @@ def!(
         #[default = 1.0] consumption_time: f32,
         #[default = true] backpressure: bool,
         #[default = false] lifo: bool,
+        #[default = false] prefer_recent: bool,
     ) {
         let queue_capacity = queue_capacity.max(1);
         let producer_capacity = producer_capacity.max(1);
@@ -26,9 +27,16 @@ def!(
             queue::vec_deque::Discipline::Fifo
         };
 
+        let overflow = if prefer_recent {
+            queue::vec_deque::Overflow::PreferRecent
+        } else {
+            queue::vec_deque::Overflow::PreferOldest
+        };
+
         let (mut sender, mut receiver) = queue::vec_deque::Queue::builder()
             .with_capacity(Some(queue_capacity))
             .with_discipline(disc)
+            .with_overflow(overflow)
             .build()
             .items("Queue", disc)
             .mutex()

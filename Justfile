@@ -6,7 +6,7 @@ dev-js:
     @npm run dev
 
 dev-rs:
-    @cargo watch --watch='crates' --watch='xtask' -x 'xtask'
+    @cargo watch --watch='crates' -x 'xtask'
 
 dev-npm:
     @cargo watch --watch='package.json' -s 'npm i'
