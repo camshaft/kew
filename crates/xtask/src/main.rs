@@ -1,5 +1,5 @@
 use std::{fs, io::Write, path::Path};
-use xshell::{cmd, Shell};
+use xshell::{Shell, cmd};
 
 fn main() {
     let sh = Shell::new().unwrap();
@@ -7,12 +7,6 @@ fn main() {
 }
 
 fn build(sh: &Shell, opt: bool) {
-    // if cmd!(sh, "which wasm-bindgen").quiet().run().is_err() {
-    //     cmd!(sh, "cargo install wasm-bindgen-cli@0.2.100")
-    //         .run()
-    //         .unwrap();
-    // }
-
     let _ = opt;
 
     cmd!(
@@ -36,10 +30,11 @@ fn build(sh: &Shell, opt: bool) {
 
         let name = path.file_stem().unwrap().to_str().unwrap();
         let src_time = path.metadata().unwrap().modified().unwrap();
-        let target_dir = Path::new("src/sims").join(name);
-        let target_file = target_dir.join("build.js");
+        let target_dir: std::path::PathBuf = Path::new("src/crates").join(name);
+        let client_file = target_dir.with_extension("ts");
+        let static_file = target_dir.with_extension("static.js");
 
-        if let Some(target_time) = target_file.metadata().ok().and_then(|m| m.modified().ok()) {
+        if let Some(target_time) = client_file.metadata().ok().and_then(|m| m.modified().ok()) {
             if target_time > src_time && target_time > script_time {
                 continue;
             }
@@ -53,24 +48,32 @@ fn build(sh: &Shell, opt: bool) {
             .run()
             .unwrap();
 
-        cmd!(
-            sh,
-            "wasm-bindgen {opt} --out-dir {target_dir} --out-name build"
-        )
-        .run()
-        .unwrap();
+        for (name, target) in [("bundler", "bundler"), ("deno", "deno")] {
+            cmd!(
+                sh,
+                "wasm-bindgen {opt} --out-dir {target_dir} --out-name {name} --target {target}"
+            )
+            .run()
+            .unwrap();
+        }
 
-        let v = {
+        let files = {
             let _dir = sh.push_dir(&target_dir);
-            emit_interface(sh, name)
+            let exports = read_exports(sh);
+            let client_i = emit_client_interface(name, &exports);
+            let static_i = emit_static_interface(name, &exports);
+
+            vec![(client_file, client_i), (static_file, static_i)]
         };
 
-        sh.write_file(target_dir.with_extension("ts"), v).unwrap();
+        for (path, contents) in files {
+            sh.write_file(path, contents).unwrap();
+        }
     }
 }
 
-fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
-    let types = sh.read_file("build.d.ts").unwrap();
+fn read_exports(sh: &Shell) -> Vec<Cls> {
+    let types = sh.read_file("bundler.d.ts").unwrap();
 
     let mut classes = vec![];
 
@@ -106,6 +109,10 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
         });
     }
 
+    classes
+}
+
+fn emit_client_interface(name: &str, classes: &[Cls]) -> Vec<u8> {
     let mut out = vec![];
     let mut indent = "";
 
@@ -123,7 +130,7 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
         };
     }
 
-    let entry = format!("./{name}/build.js");
+    let entry = format!("./{name}/bundler.js");
     wl!("// @ts-nocheck");
     w!("import * as wasm from {entry:?};");
     wl!("import { Sim as __Sim } from '~/data/sim.ts';");
@@ -145,12 +152,7 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
     for cls in classes {
         let Cls { name, properties } = cls;
 
-        w!("export interface {name}Props {{");
-        for Property { name, ty } in &properties {
-            w!("  {name}?: {ty};");
-        }
-        wl!("}");
-        w!();
+        cls.emit_props(&mut out);
 
         w!("export function use{name}<T>(props: {name}Props, transform: SimTransform<T>): T {{");
         indent = "  ";
@@ -168,11 +170,11 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
             wl!("  const _run = i._run;");
             w!("  i.run = {throttle}(500, run);");
             wl!("  function run(");
-            for Property { name, ty } in &properties {
+            for Property { name, ty } in properties {
                 w!("    {name}: {ty} | undefined, ");
             }
             wl!("  ) {{");
-            for Property { name, .. } in &properties {
+            for Property { name, .. } in properties {
                 w!("    if (typeof {name} !== 'undefined') this.{name} = {name};");
             }
             wl!("    const _ret = _run.call(this);");
@@ -189,11 +191,11 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
             // w!();
 
             w!("{use_effect}(() => _instance.run(");
-            for Property { name, .. } in &properties {
+            for Property { name, .. } in properties {
                 w!("    props.{name},");
             }
             w!("), [");
-            for Property { name, .. } in &properties {
+            for Property { name, .. } in properties {
                 w!("  props.{name},");
             }
             wl!("]);");
@@ -210,9 +212,70 @@ fn emit_interface(sh: &Shell, name: &str) -> Vec<u8> {
     out
 }
 
+fn emit_static_interface(name: &str, classes: &[Cls]) -> Vec<u8> {
+    let mut out = vec![];
+    let mut indent = "";
+
+    macro_rules! w {
+        () => {
+            writeln!(out, "{indent}").unwrap()
+        };
+        ($($tt:tt)*) => {
+            writeln!(out, "{indent}{}", format_args!($($tt)*)).unwrap()
+        };
+    }
+    macro_rules! wl {
+        ($v:expr) => {
+            w!("{}", $v)
+        };
+    }
+
+    let entry = format!("./{name}/deno.js");
+    wl!("// @ts-nocheck");
+    w!("import * as wasm from {entry:?};");
+    wl!("import { Sim as __Sim } from '../data/sim.ts';");
+    w!();
+
+    for cls in classes {
+        let Cls { name, properties } = cls;
+
+        w!("export function {name}(props) {{");
+        indent = "  ";
+
+        {
+            w!("const i = new wasm.{name}();");
+            for Property { name, ty } in properties {
+                if ty == "number" {
+                    w!("if (props.has({name:?})) i.{name} = parseInt(props.get({name:?}));");
+                } else {
+                    w!("if (props.has({name:?})) i.{name} = props.get({name:?});");
+                }
+            }
+            wl!("return i._run();");
+        }
+
+        indent = "";
+        wl!("}");
+        w!();
+    }
+
+    out
+}
+
 struct Cls {
     name: String,
     properties: Vec<Property>,
+}
+
+impl Cls {
+    fn emit_props(&self, out: &mut Vec<u8>) {
+        let Self { name, properties } = self;
+        writeln!(out, "export interface {name}Props {{").unwrap();
+        for Property { name, ty } in properties {
+            writeln!(out, "  {name}?: {ty};").unwrap();
+        }
+        writeln!(out, "}}\n").unwrap();
+    }
 }
 
 struct Property {

@@ -1,19 +1,23 @@
 import { StrictMode } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { StaticRouter } from "react-router";
-import App from "../App";
+import { renderToStringAsync as renderToString } from "preact-render-to-string";
+import { LocationProvider } from "preact-iso";
+import { locationStub } from "preact-iso/prerender";
+import App from "../App.tsx";
 
-export { default as routes } from "~react-pages";
+export { routes } from "@/routes.tsx";
 
 export async function render({ url }: { url: string }) {
+  console.log(`rendering ${url} to markdown`);
+
   const head = "";
 
-  // TODO swap out the html tags for native markdown syntax
-  const html = renderToStaticMarkup(
+  locationStub(url);
+
+  const html = await renderToString(
     <StrictMode>
-      <StaticRouter basename="/kew" location={url}>
+      <LocationProvider scope={import.meta.env.BASE_URL}>
         <App />
-      </StaticRouter>
+      </LocationProvider>
     </StrictMode>
   );
 

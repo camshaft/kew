@@ -19,6 +19,7 @@ export class Queue {
   public name: string;
   public isGroup: boolean = false;
   public items: Items = new Items();
+  public itemCounts: Stats = new Stats();
 
   constructor(id: number, name: string, isGroup: boolean) {
     this.id = id;
@@ -29,7 +30,13 @@ export class Queue {
   public clone(): Queue {
     const clone = new Queue(this.id, this.name, this.isGroup);
     clone.items = this.items.clone();
+    clone.itemCounts = this.itemCounts.clone();
     return clone;
+  }
+
+  public finish(now: number) {
+    this.items.finish(now);
+    this.itemCounts.record(new StatEntry(now, this.items.length, this.id));
   }
 }
 
@@ -42,6 +49,10 @@ export class Items {
     clone.items = this.items.map((i) => i.clone());
     clone.sojournTimes = this.sojournTimes.clone();
     return clone;
+  }
+
+  get length(): number {
+    return this.items.length;
   }
 
   public pushBack(item: Item, now: number) {

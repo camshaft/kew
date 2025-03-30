@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import * as routerDom from "react-router-dom";
+import { useLocation } from "preact-iso";
 import { pathToRoute } from "./routes.tsx";
 
 let currentListener = {
@@ -9,30 +9,24 @@ let currentListener = {
 export default function KeyBindings({ onEscape }: { onEscape: () => void }) {
   if (import.meta.env.SSR) return;
 
-  const { useNavigate, useLocation } = routerDom;
-
-  const navigate = useNavigate();
   const location = useLocation();
-  let route = pathToRoute.get(location.pathname);
+  let route = pathToRoute.get(location.path);
 
   currentListener.fn = (event: KeyboardEvent) => {
     switch (event.key) {
       case "ArrowLeft":
-        const prev = route?.meta?.prev;
-        if (prev) navigate(prev);
+        const prev = route?.prev?.path;
+        if (prev) location.route(prev);
         break;
       case "ArrowRight":
-        const next = route?.meta?.next;
-        if (next) navigate(next);
+        const next = route?.next?.path;
+        if (next) location.route(next);
         break;
       case "Escape":
         onEscape();
         break;
       default:
         break;
-    }
-
-    switch (event.key) {
     }
   };
 

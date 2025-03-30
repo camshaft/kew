@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S deno -A
 
 import { createServer } from "vite";
 import { readFile, cp, rm, mkdir, writeFile } from "node:fs/promises";
@@ -8,6 +8,7 @@ let root = `${import.meta.dirname}/..`;
 const target = process.argv[2] ?? "static";
 
 const siteTitle = "Kew";
+const baseUrl = "/kew";
 
 const outDir = `${root}/target/book`;
 const targetDir = `${outDir}/${target}`;
@@ -26,7 +27,7 @@ await cp(`${outDir}/web/assets`, `${targetDir}/assets`, {
   recursive: true,
 });
 
-const { render, routes } = await server.ssrLoadModule(entry);
+let { render, routes } = await server.ssrLoadModule(entry);
 
 let mdOut = "";
 
@@ -47,7 +48,14 @@ include-before:
 `;
 }
 
-await renderRoutes(routes);
+if (!routes || !routes.length) {
+  console.error(routes);
+  throw new Error('no routes');
+}
+
+for (const child of routes) {
+  await renderRoute(child);
+}
 
 await server.close();
 
@@ -55,23 +63,12 @@ if (target == "md") {
   await writeFile(`${targetDir}/index.md`, mdOut);
 }
 
-async function renderRoutes(routes) {
-  if (!routes) return;
-  for (const child of routes) {
-    await renderRoute(child);
-  }
-}
-
-async function renderRoute({ meta, children }) {
-  if (!meta) return;
-
-  let { fullPath, title } = meta;
-  console.log(`Rendering ${fullPath}`);
-
+async function renderRoute({ path, title }) {
   title = title ? `${siteTitle} - ${title}` : siteTitle;
 
-  let url = fullPath;
-  if (!url.startsWith("/kew")) url = `/kew${url}`;
+  let url = path;
+  if (!url.startsWith(baseUrl)) url = `${baseUrl}${url}`;
+  else path = path.replace(baseUrl, '');
 
   const args = {
     url,
@@ -80,15 +77,13 @@ async function renderRoute({ meta, children }) {
 
   const rendered = await render(args);
 
-  rendered.url = fullPath;
+  rendered.url = path;
 
   if (target == "static") {
     await renderHtml(rendered);
   } else if (target == "md") {
     await renderMd(rendered);
   }
-
-  await renderRoutes(children);
 }
 
 async function renderHtml({ url, head, html }) {

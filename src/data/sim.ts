@@ -1,6 +1,10 @@
 import { Model } from "./model.ts";
 import * as m from "./model.ts";
 
+export function createSim(steps: Step[], queues: Queue[]): Sim {
+  return new Sim(steps, queues);
+}
+
 export class Sim {
   public steps: Step[];
   public queues: Queue[];
@@ -44,10 +48,14 @@ export class Sim {
     model.step = stepId;
     model.lifetimes.finish();
     model.queues.forEach((q) => {
-      q.items.finish(model.seconds);
+      q.finish(model.seconds);
     });
     return model;
   }
+}
+
+export function createQueue(name: string, isGroup?: boolean): Queue {
+  return isGroup ? new Group(name) : new Queue(name);
 }
 
 export class Queue {
@@ -62,6 +70,10 @@ export class Group extends Queue {
   constructor(name: string) {
     super(name);
   }
+}
+
+export function createStep(seconds: number, ...events: Event[]): Step {
+  return new Step(seconds, events);
 }
 
 export class Step {
@@ -90,6 +102,14 @@ export interface Event {
   apply(model: Model): void;
 }
 
+export function createPushFront(
+  destination: number,
+  value: number,
+  source?: number
+): PushFront {
+  return new PushFront(source, destination, value);
+}
+
 export class PushFront implements Event {
   source: number | undefined;
   destination: number;
@@ -111,6 +131,14 @@ export class PushFront implements Event {
     }
     model.queues[this.destination].items.pushFront(item, model.seconds);
   }
+}
+
+export function createPushBack(
+  destination: number,
+  value: number,
+  source?: number
+): PushFront {
+  return new PushBack(source, destination, value);
 }
 
 export class PushBack implements Event {
@@ -136,6 +164,10 @@ export class PushBack implements Event {
   }
 }
 
+export function createPop(queue: number, value: number): Pop {
+  return new Pop(queue, value);
+}
+
 export class Pop implements Event {
   queue: number;
   value: number;
@@ -150,4 +182,65 @@ export class Pop implements Event {
     const lifetime = item.lifetime(model.seconds);
     model.lifetimes.record(new m.StatEntry(model.seconds, lifetime, item.id));
   }
+}
+
+export function serialize(sim: Sim): string {
+  const out = [];
+
+  out.push(
+    'import { createSim, createQueue, createStep, createPushFront, createPushBack, createPop } from "~/data/sim.ts";'
+  );
+  out.push("");
+
+  function serializeEvent(event: Event): string {
+    // use the constructor name since it's might be a different instance
+    const ctr = event.constructor.name;
+
+    if (ctr == "PushFront") {
+      let evt = event as PushFront;
+      let args = `${evt.destination}, ${evt.value}`;
+      if (typeof evt.source !== "undefined") args += `, ${evt.source}`;
+      return `createPushFront(${args})`;
+    }
+
+    if (ctr == "PushBack") {
+      let evt = event as PushBack;
+      let args = `${evt.destination}, ${evt.value}`;
+      if (typeof evt.source !== "undefined") args += `, ${evt.source}`;
+      return `createPushBack(${args})`;
+    }
+
+    if (ctr == "Pop") {
+      let evt = event as Pop;
+      return `createPop(${evt.queue}, ${evt.value})`;
+    }
+
+    throw new Error("invalid event: " + ctr + "\n\n" + JSON.stringify(event));
+  }
+
+  out.push("export const sim = createSim([");
+  sim.steps.forEach((step) => {
+    out.push(`  createStep(${step.seconds},`);
+    step.events.forEach((event) => {
+      out.push(`    ${serializeEvent(event)},`);
+    });
+    out.push("  ),");
+  });
+  out.push("], [");
+  sim.queues.forEach((queue) => {
+    const ctr = queue.constructor.name;
+    let args = JSON.stringify(queue.name);
+    if (ctr == "Group") args += ", true";
+    out.push(`  createQueue(${args}),`);
+  });
+  out.push("]);");
+  out.push("");
+
+  out.push("export const model = sim.states();");
+  out.push("");
+
+  out.push("export default model;");
+  out.push("");
+
+  return out.join("\n");
 }

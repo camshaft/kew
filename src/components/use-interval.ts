@@ -5,6 +5,8 @@ export function useInterval(
   delay: number,
   isActive?: boolean
 ) {
+  if (import.meta.env.SSR) return;
+
   const savedCallback = useRef(callback);
 
   useEffect(() => {
