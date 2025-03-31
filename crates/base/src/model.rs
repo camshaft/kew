@@ -90,7 +90,7 @@ impl Scope {
 pub mod item;
 pub mod queue;
 
-#[wasm_bindgen(raw_module = "~/data/sim.ts")]
+#[wasm_bindgen(raw_module = "../../data/sim.ts")]
 extern "C" {
     pub type Sim;
 
@@ -107,7 +107,7 @@ extern "C" {
     pub fn push_step(this: &Sim, step: Step);
 }
 
-#[wasm_bindgen(raw_module = "~/data/sim.ts")]
+#[wasm_bindgen(raw_module = "../../data/sim.ts")]
 extern "C" {
     pub type Queue;
 
@@ -115,7 +115,7 @@ extern "C" {
     pub fn new(name: &str) -> Queue;
 }
 
-#[wasm_bindgen(raw_module = "~/data/sim.ts")]
+#[wasm_bindgen(raw_module = "../../data/sim.ts")]
 extern "C" {
     #[wasm_bindgen(extends = Queue)]
     pub type Group;
@@ -124,7 +124,7 @@ extern "C" {
     pub fn new(name: &str) -> Group;
 }
 
-#[wasm_bindgen(raw_module = "~/data/sim.ts")]
+#[wasm_bindgen(raw_module = "../../data/sim.ts")]
 extern "C" {
     pub type Step;
 
@@ -143,7 +143,7 @@ extern "C" {
 
 type Id = i32;
 
-#[wasm_bindgen(raw_module = "~/data/sim.ts")]
+#[wasm_bindgen(raw_module = "../../data/sim.ts")]
 extern "C" {
     pub type PushBack;
 
@@ -151,7 +151,7 @@ extern "C" {
     pub fn new(source: Option<Id>, destination: Id, value: Id) -> PushBack;
 }
 
-#[wasm_bindgen(raw_module = "~/data/sim.ts")]
+#[wasm_bindgen(raw_module = "../../data/sim.ts")]
 extern "C" {
     pub type PushFront;
 
@@ -159,7 +159,7 @@ extern "C" {
     pub fn new(source: Option<Id>, destination: Id, value: Id) -> PushFront;
 }
 
-#[wasm_bindgen(raw_module = "~/data/sim.ts")]
+#[wasm_bindgen(raw_module = "../../data/sim.ts")]
 extern "C" {
     pub type Pop;
 

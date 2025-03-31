@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence as _AnimatePresence } from "motion/react";
 import { Model } from "../data/model";
 import * as m from "../data/model";
 import clsx from "clsx";
@@ -9,6 +9,14 @@ export interface Props {
   idx: number;
   showAge?: boolean;
 }
+
+const AnimatePresence = import.meta.env.SSR
+  ? ({ children }: any) => children
+  : _AnimatePresence;
+
+const AnimatedDiv = import.meta.env.SSR
+  ? ({ ...props }) => <div {...props} />
+  : motion.div;
 
 export default function QueueVis({ states, idx, showAge }: Props) {
   idx = Math.max(idx, 0);
@@ -88,9 +96,7 @@ function QueueLabel({ queue, showAge }: { queue: m.Queue; showAge: boolean }) {
         }
       )}
     >
-      <div className={showAge ? "text-left" : "text-center"}>
-        {queue.name}
-      </div>
+      <div className={showAge ? "text-left" : "text-center"}>{queue.name}</div>
       {showAge && (
         <div className="text-right text-xs">
           Avg Sojourn: {formatNumber(queue.items.sojournTimes.average)}
@@ -114,7 +120,7 @@ function Item({
   showAge: boolean;
 }) {
   return (
-    <motion.div
+    <AnimatedDiv
       key={`i${item.id}`}
       exit={{ transform: "translateY(-100px)", opacity: 0, height: 0 }}
       initial={{ transform: "translateY(-100px)", opacity: 0, height: 0 }}
@@ -129,7 +135,7 @@ function Item({
       }}
     >
       <ItemLabel item={item} state={state} showAge={showAge} />
-    </motion.div>
+    </AnimatedDiv>
   );
 }
 

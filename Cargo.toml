@@ -9,3 +9,7 @@ wasm-bindgen = { version = "=0.2.100" }
 
 [profile.release]
 opt-level = "s"
+lto = "fat"
+panic = "abort"
+strip = "symbols"
+codegen-units = 1

@@ -1,49 +1,78 @@
 import routes from "~react-pages";
-import { NavItem, NavItems, TopNavItem, TopNavItems } from "@/Nav";
+import { Router as _Router, Route as _Route, useLocation } from "preact-iso";
 
 export interface Props {
   children: any;
 }
 
 export interface Route {
-  meta: {
-    id: string;
-    title: string;
-    fullPath: string;
-    next: string | null;
-    prev: string | null;
-    depth: number;
-  };
-  children: undefined | Route[];
+  path: string;
+  id: string;
+  idx: number;
+  title: string;
+  depth: number;
+  prev: Route | undefined;
+  next: Route | undefined;
+  element: any;
+  children: Route[];
+  parent?: Route;
 }
-
-export const router = routes;
 
 export const pathToRoute: Map<string, Route> = new Map();
 
-export const navItems = setupNav(routes as Route[]);
+const routerRoutes = [];
+const rootRoutes: Route[] = [];
+let currentDepth = Number.MAX_SAFE_INTEGER;
+let currentChildren: Route[] = [];
 
-function setupNav(routes: Route[], depth = 0) {
-  const Items = depth == 0 ? TopNavItems : NavItems;
-  const Item = depth == 0 ? TopNavItem : NavItem;
+for (let idx = routes.length - 1; idx >= 0; idx--) {
+  let r = routes[idx];
+  r.children = [];
 
-  return (
-    <Items>
-      {routes
-        .filter(({ meta }) => !!meta)
-        .map((route, idx) => {
-          route.meta.depth = depth;
-          const {
-            meta: { id, title, fullPath },
-            children,
-          } = route;
-          pathToRoute.set(fullPath, route);
-          return (
-            <Item key={idx} id={id} title={title} fullPath={fullPath}>
-              {children && children.length > 0 && setupNav(children, depth + 1)}
-            </Item>
-          );
-        })}
-    </Items>
-  );
+  if (!r.depth) rootRoutes.unshift(r);
+
+  if (r.depth < currentDepth) {
+    currentDepth = r.depth;
+    currentChildren.forEach((child) => {
+      child.parent = r;
+    });
+    r.children.push(...currentChildren);
+    currentChildren = [r];
+  } else if (r.depth > currentDepth) {
+    currentDepth = r.depth;
+    currentChildren = [r];
+  } else {
+    currentChildren.unshift(r);
+  }
+
+  routerRoutes.push(handleRoute(r, idx));
+}
+
+export const router = <_Router>{routerRoutes}</_Router>;
+
+export { routes, rootRoutes };
+
+function handleRoute(route: Route, idx: number) {
+  let { path, element, title } = route;
+
+  route.idx = idx;
+  route.prev = routes[idx - 1];
+  route.next = routes[idx + 1];
+  path = `${import.meta.env.BASE_URL}${path}`;
+  route.path = path;
+
+  pathToRoute.set(path, route);
+  pathToRoute.set(path.replace(/\/$/, ""), route);
+
+  const component = () => {
+    if (!import.meta.env.SSR) window.document.title = `Kew - ${title}`;
+    return element;
+  };
+
+  return <_Route key={idx} path={path} component={component} />;
+}
+
+export function useRoute(): Route | undefined {
+  const { path } = useLocation();
+  return pathToRoute.get(path);
 }

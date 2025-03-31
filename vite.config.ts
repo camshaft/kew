@@ -1,36 +1,35 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 import Pages from "./plugins/pages.ts";
+import StaticCrate from "./plugins/static-crate.ts";
 import remarkGfm from "remark-gfm";
+import { visualizer } from "rollup-plugin-visualizer";
+import preact from "@preact/preset-vite";
+
+const isProd = process.env.NODE_ENV == "production";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    StaticCrate(),
     wasm(),
     topLevelAwait(),
     Pages(),
     tailwindcss(),
     mdx({ jsx: false, remarkPlugins: [[remarkGfm, {}]] }),
-    react({
-      parserConfig(id) {
-        if (id.endsWith(".mdx") || id.endsWith(".jsx"))
-          return { jsx: true, syntax: "ecmascript" };
-        if (id.endsWith(".ts")) return { syntax: "typescript" };
-        if (id.endsWith(".tsx")) return { tsx: true, syntax: "typescript" };
-        if (id.endsWith(".css")) return;
-        return { syntax: "ecmascript" };
-      },
+    preact(),
+    visualizer({
+      filename: "target/build-stats.html",
     }),
   ],
   base: "/kew",
   resolve: {
     alias: {
       "@": "/src/components",
-      $: "/src/sims",
+      $: "/src/crates",
       "~": "/src",
     },
   },
@@ -38,5 +37,8 @@ export default defineConfig({
     watch: {
       ignored: ["**/target/**", "**/*.rs"],
     },
+  },
+  build: {
+    minify: isProd,
   },
 });

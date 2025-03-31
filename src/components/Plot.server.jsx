@@ -30,8 +30,8 @@ class Document {
 
 class Style {
   static empty = new Style();
-  setProperty() { }
-  removeProperty() { }
+  setProperty() {}
+  removeProperty() {}
 }
 
 class Element {

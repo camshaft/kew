@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 pkg/*
-src/sims/*
+src/crates/*
 target/
+*.sock
+# we use deno
+package-lock.json

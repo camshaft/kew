@@ -1,5 +1,4 @@
-import { useLocation } from "react-router";
-import { pathToRoute } from "./routes";
+import { useRoute } from "./routes";
 import createComponents from "./content.tsx";
 
 export interface Props {
@@ -7,12 +6,11 @@ export interface Props {
 }
 
 export default function Page({ children }: Props) {
-  const { pathname } = useLocation();
-  const route = pathToRoute.get(pathname);
+  const route = useRoute();
 
   if (!route) return;
 
-  const title = route.meta.title;
+  const title = route.title;
 
   const components = createComponents(route);
 

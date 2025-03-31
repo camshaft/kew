@@ -3,13 +3,10 @@ dev: build-crates
     @overmind start
 
 dev-js:
-    @npm run dev
+    @deno run -A --node-modules-dir npm:vite
 
 dev-rs:
     @cargo watch --watch='crates' -x 'xtask'
-
-dev-npm:
-    @cargo watch --watch='package.json' -s 'npm i'
 
 [group('build')]
 build: check-tsc build-crates build-web build-static build-md
@@ -20,11 +17,11 @@ build-crates:
 
 [group('build')]
 build-web:
-    @npm run build
+    @NODE_ENV=production deno run -A --node-modules-dir npm:vite build --outDir target/book/web
 
 [group('build')]
 build-static:
-    @NODE_ENV=development VITE_SSR_TARGET=static bin/render static
+    @NODE_ENV=development VITE_SSR_TARGET=static deno run -A --node-modules-dir ./bin/render static
 
 [group('build')]
 build-md:
@@ -36,15 +33,12 @@ build-pdf:
     @pandoc target/book/md/index.md --output target/book/pdf/kew.pdf
 
 [group('build')]
-build-ghp: npmi build
-    @rm -rf target/book/ghp
-    @cp -r target/book/static target/book/ghp
-    @touch target/book/ghp/.nojekyll
-    #@cp target/book/pdf/kew.pdf target/book/ghp/kew.pdf
-
-npmi:
-    npm i
+build-ghp: build
+    @rm -rf target/book/kew
+    @cp -r target/book/static target/book/kew
+    @touch target/book/kew/.nojekyll
+    #@cp target/book/pdf/kew.pdf target/book/kew/kew.pdf
 
 [group('checks')]
 check-tsc:
-    @npm run check-tsc
+    @deno run -A --node-modules-dir npm:typescript/tsc --noEmit

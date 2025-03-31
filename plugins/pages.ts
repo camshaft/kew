@@ -10,8 +10,9 @@ export default function () {
     },
     onRoutesGenerated: (routes) => {
       routes = formatRoutes(routes, []);
-      buildNav(routes);
-      return routes;
+      const list = [];
+      flattenRoutes(routes, list);
+      return list;
     },
   });
 }
@@ -52,57 +53,38 @@ function formatRoute(route: any, idx: number, parents: StackItem[]) {
 
   if (!fullPath.endsWith("/")) fullPath += "/";
 
-  route.meta = {
-    id,
-    title,
-    fullPath,
-  };
+  route.id = id;
+  route.title = title;
+  route.depth = parents.length;
+  route.path = fullPath;
+  delete route.caseSensitive;
 
   const index = route.children.find((r: any) => r.path == "" && r.element);
+  if (index) {
+    route.element = index.element;
+  }
 
   const children = formatRoutes(route.children, stack);
-
-  if (index) {
-    if (children.length) {
-      index.index = true;
-      children.unshift(index);
-    } else {
-      // promote the index to itself
-      route.element = index.element;
-    }
-  }
 
   route.children = children;
 
   return route;
 }
 
-function buildNav(route: any, prev: any = null, next: any = null) {
+function flattenRoutes(route: any, out: any[]) {
   if (Array.isArray(route)) {
-    const routes = route;
-    let parentNext: any;
-    routes.forEach((route, idx) => {
-      if (!route.meta) return;
-      // the parent next is the first non-index route
-      if (!parentNext) parentNext = route.meta.fullPath;
-      const nextRoute = routes[idx + 1];
-      const localNext = nextRoute?.meta?.fullPath || next;
-      prev = buildNav(route, prev, localNext);
+    route.forEach((route, idx) => {
+      if (!route.element) return;
+      flattenRoutes(route, out);
     });
-    return parentNext;
   }
 
-  if (!route.meta) return prev;
+  if (!route.element) return;
 
-  route.meta.prev = prev;
-  route.meta.next = next;
-
-  if (route.children.length) {
-    route.meta.next = buildNav(route.children, route.meta.fullPath, next);
-    return route.children[route.children.length - 1].meta.fullPath;
-  }
-
-  return route.meta.fullPath;
+  const children = route.children;
+  out.push(route);
+  flattenRoutes(children, out);
+  delete route.children;
 }
 
 interface StackItem {

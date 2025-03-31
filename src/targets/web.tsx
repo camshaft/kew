@@ -1,13 +1,21 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { createRoot, hydrateRoot } from "react-dom/client";
+import { LocationProvider } from "preact-iso";
 import "./web/index.css";
 import App from "../App.tsx";
 
-createRoot(document.getElementById("root")!).render(
+const container = document.getElementById("root")!;
+
+const root = (
   <StrictMode>
-    <BrowserRouter basename="/kew">
+    <LocationProvider scope={import.meta.env.BASE_URL}>
       <App />
-    </BrowserRouter>
+    </LocationProvider>
   </StrictMode>
 );
+
+if (import.meta.env.PROD) {
+  hydrateRoot(container, root);
+} else {
+  createRoot(container).render(root);
+}

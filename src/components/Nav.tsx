@@ -1,24 +1,23 @@
 import clsx from "clsx";
 import { ClassValue } from "clsx";
-import { NavLink } from "react-router";
+import { Link } from "./Link.tsx";
+import { Route, rootRoutes } from "./routes.tsx";
 
-export interface Props {
-  children: any;
-}
+const navItems = setupNav(rootRoutes);
 
-export default function Nav({ children }: Props) {
+export default function Nav() {
   return (
     <nav className="flex flex-col gap-8" aria-label="Title of contents">
-      {children}
+      {navItems}
     </nav>
   );
 }
 
-export function TopNavItems({ children }: { children: any }) {
+function TopNavItems({ children }: { children: any }) {
   return <div className="flex flex-col gap-3">{children}</div>;
 }
 
-export function NavItems({ children }: { children: any }) {
+function NavItems({ children }: { children: any }) {
   return (
     <ol className="flex flex-col gap-2 border-l dark:border-[color-mix(in_oklab,_var(--color-gray-950),white_20%)] border-[color-mix(in_oklab,_var(--color-gray-950),white_90%)]">
       {children}
@@ -26,7 +25,7 @@ export function NavItems({ children }: { children: any }) {
   );
 }
 
-export interface ItemProps {
+interface ItemProps {
   id: string;
   title: string;
   fullPath: string;
@@ -39,10 +38,11 @@ function itemClasses(...v: ClassValue[]) {
   return clsx(className, ...v);
 }
 
-export function TopNavItem({ id, title, fullPath, children }: ItemProps) {
+function TopNavItem({ id, title, fullPath, children }: ItemProps) {
   return (
     <>
-      <NavLink
+      <Link
+        nav
         to={fullPath}
         className={itemClasses(
           "font-mono text-sm/6 font-medium tracking-widest uppercase sm:text-xs/6"
@@ -51,24 +51,42 @@ export function TopNavItem({ id, title, fullPath, children }: ItemProps) {
         <h3>
           {id} {title}
         </h3>
-      </NavLink>
+      </Link>
       {children}
     </>
   );
 }
 
-export function NavItem({ id, title, fullPath, children }: ItemProps) {
+function NavItem({ id, title, fullPath, children }: ItemProps) {
   return (
     <li className="-ml-px flex flex-col items-start gap-2">
-      <NavLink
+      <Link
+        nav
         className={itemClasses(
           "inline-block border-l border-transparent text-base/8 sm:text-sm/6 pl-5 sm:pl-4"
         )}
         to={fullPath}
       >
         {id} {title}
-      </NavLink>
+      </Link>
       {children}
     </li>
+  );
+}
+
+function setupNav(routes: Route[], depth: number = 0) {
+  const Items = depth == 0 ? TopNavItems : NavItems;
+  const Item = depth == 0 ? TopNavItem : NavItem;
+
+  return (
+    <Items>
+      {routes.map(({ id, title, path, children }, idx) => {
+        return (
+          <Item key={idx} id={id} title={title} fullPath={path}>
+            {children && children.length > 0 && setupNav(children, depth + 1)}
+          </Item>
+        );
+      })}
+    </Items>
   );
 }
