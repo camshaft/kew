@@ -60,6 +60,9 @@ function FigureOne() {
         <div className="z-10 bg-linear-to-t from-white to-white/40 dark:from-gray-900 dark:to-gray-900/0 absolute bottom-0 h-20 w-full" />
       </div>
       <Plot
+        width={1200}
+        height={700}
+        className="mt-20 min-w-full h-auto"
         marks={[
           lineY(state.queues[1].itemCounts.entries, {
             x: { value: "timestamp", label: "Time (s)" },

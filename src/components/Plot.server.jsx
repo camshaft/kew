@@ -3,8 +3,16 @@ import { createElement as h } from "react";
 
 // From https://codesandbox.io/p/sandbox/plot-react-f1jetw?file=%2Fsrc%2FPlotFigure.js%3A20%2C4
 
-export default function PlotFigure(options) {
-  return Plot.plot({ ...options, document: new Document() }).toHyperScript();
+export default function PlotFigure({ className, ...options }) {
+  const el = Plot.plot({
+    ...options,
+    document: new Document(),
+  }).toHyperScript();
+  if (className) {
+    el.props.className = className;
+    el.props.class = className;
+  }
+  return el;
 }
 
 class Document {
