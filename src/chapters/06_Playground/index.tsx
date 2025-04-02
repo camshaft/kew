@@ -42,7 +42,7 @@ export default function () {
   const [consumption_time, setConsumptionTime] = useState(
     getFloat("consumption-time", 4.0)
   );
-  const [mode, setMode] = useState<"FIFO" | "LIFO">("FIFO");
+  const [mode, setMode] = useState<"FIFO" | "LIFO">(getBool('lifo', false) ? "LIFO" : "FIFO");
   const [backpressure, setBackpressure] = useState(
     getBool("backpressure", true)
   );
@@ -50,7 +50,7 @@ export default function () {
   const [prefer_recent, setPreferNew] = useState(
     getBool("prefer-recent", false)
   );
-  const [idx, _setIdx] = useState(0);
+  const [idx, _setIdx] = useState(getInt("step", 0));
   const [playing, setPlaying] = useState(getBool("playing", true));
 
   const states = usePointToPoint(
