@@ -16,6 +16,33 @@ export default (route: Route) => {
         </>
       );
     },
+    h2({ children }: any) {
+      return (
+        <>
+          {`\n${headerPrefix}## `}
+          {children}
+          {`\n\n`}
+        </>
+      );
+    },
+    h3({ children }: any) {
+      return (
+        <>
+          {`\n${headerPrefix}### `}
+          {children}
+          {`\n\n`}
+        </>
+      );
+    },
+    h4({ children }: any) {
+      return (
+        <>
+          {`\n${headerPrefix}#### `}
+          {children}
+          {`\n\n`}
+        </>
+      );
+    },
     p({ children }: any) {
       return (
         <>
@@ -23,6 +50,24 @@ export default (route: Route) => {
           {`\n`}
         </>
       );
+    },
+    ul({ children }: any) {
+      return (
+        <>
+          {`\n`}
+          {children}
+          {`\n`}
+        </>
+      );
+    },
+    Math({ children }: any) {
+      return `$$${children}$$`;
+    },
+    FIFO() {
+      return "FIFO";
+    },
+    LIFO() {
+      return "LIFO";
     },
   };
 };

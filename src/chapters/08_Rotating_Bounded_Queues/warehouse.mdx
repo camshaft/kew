@@ -1,0 +1,42 @@
+The warehouse is packed, with shelves overflowing and boxes squeezed into the break room and parking lot. In the last chapter, you learned how bounded queues manage limited space by rejecting new shipments when full, preventing overload but losing potential sales. But what if you could make room for new arrivals without always turning them away? Instead of rejecting shipments, you might remove an existing box—maybe the oldest one, gathering dust, or the newest, barely unpacked—to free up space. This is the idea behind rotating bounded queues. In this chapter, we’ll explore rotation strategies in the warehouse, focusing on dropping existing boxes to accept new ones. You’ll test the formulas and experiment with a simulator to see how rotation balances space, efficiency, and fairness, helping you manage overflow without sacrificing too much.
+
+## What Are Rotating Bounded Queues?
+
+A rotating bounded queue has a finite capacity (K boxes) and uses a rotation policy to make room for new arrivals when full, instead of rejecting them. In the warehouse:
+
+### Bounded Queue (Rejection)
+
+When the queue hits capacity K (including the box being processed), new shipments are turned away, as in Chapter 6’s M/M/1/K model.
+
+### Rotating Bounded Queue
+
+When full, an existing box is dropped to accept the new shipment. Common policies include:
+
+#### Drop-Oldest
+
+Remove the oldest box (first in the queue), prioritizing newer inventory.
+
+#### Drop-Newest
+
+Remove the most recently added box (last in the queue), preserving older inventory.
+
+We’ll model this as an M/M/1/K queue with:
+
+- Shipments arriving at a rate of λ (lambda) boxes per minute (e.g., λ = 5).
+- The worker processing at a rate of μ (mu) boxes per minute (e.g., μ = 6).
+- FIFO discipline for processing (standard for warehouses), with rotation policies (drop-oldest or drop-newest) when full.
+- Non-preemptive service: Once a box is picked, it’s fully processed.
+- Capacity K (e.g., K = 10), including the box being processed.
+
+Rotation accepts all arrivals by sacrificing existing items, unlike rejection, which sacrifices new ones.
+
+## Why Rotation Matters
+
+Rotation strategies offer flexibility in bounded queues, allowing you to accept new shipments without overloading the warehouse. Dropping boxes prevents the chaos of infinite piling, but you lose inventory, just like rejecting shipments loses sales. The choice of policy—drop-oldest or drop-newest—affects which boxes you keep:
+
+- **Drop-Oldest** favors fresh inventory, useful for fast-moving goods or systems where newer items are more valuable (e.g., tech products).
+- **Drop-Newest** preserves older inventory, suited for systems where fairness or historical value matters (e.g., archival records). Rotation stabilizes the system like rejection but shifts the loss from new arrivals to existing items, requiring you to balance inventory value, fairness, and throughput.
+
+## Key Formulas
+
+The M/M/1/K queue with rotation (dropping) has similar steady-state metrics to the rejection-based M/M/1/K, as the queue length remains capped at K, and all arrivals are accepted (no loss probability like P_K). However, metrics reflect the effective queue dynamics after drops. We’ll focus on drop-oldest and drop-newest, using FIFO for processing. Test the formulas below to see how they apply in the warehouse.

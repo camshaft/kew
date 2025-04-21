@@ -1,0 +1,37 @@
+Picture a coffee shop on a quiet morning. Customers stroll in, line up, and order their drinks. The barista serves them one by one, and nobody waits long. The line stays short, the barista stays relaxed, and everything runs like clockwork. This is a healthy queue, and it's the least interesting kind there is. Why? Because when a queue is healthy—when the number of customers arriving matches what the barista can handle — it behaves the same way every time, no matter how you set it up. Customers arrive, get served, and leave, with no hassle. But when a rush hits, like a morning commuter wave, the line grows, waits stretch, and pressure builds. Now, how you manage the queue matters. Do you limit how many can line up? Serve the newest customers first? Call in another barista? These choices are what queueing theory is all about.
+
+Queueing theory studies how waiting lines work, especially when they're pushed to their limits. It's about understanding what happens when there's more demand than the system can handle and deciding how to manage it. Queues are everywhere, shaping how systems function when resources are shared and demand varies. By understanding queues, you learn to make smart decisions—balancing speed, fairness, and cost. This book will guide you through how queues operate, show you ways to handle overload, and help you build intuition for choosing the right strategy for your needs, whether you're streamlining a service or designing a system.
+
+## Why Queues Matter
+
+Queues show up wherever resources are shared and demand varies. Think of an online store during a flash sale. Thousands of users try to check out at once, overwhelming the servers. If the system isn't ready, some users wait, others leave, and the site might even crash. A well-managed queue keeps things stable, shortens delays, and prioritizes critical tasks. A poorly managed one leads to lost sales and frustrated customers. Queueing theory gives you the tools to predict how a system will behave, measure its performance, and make informed decisions.
+
+Take a customer support hotline. You could limit how many callers wait on hold to keep costs down, but that might mean more people hang up. Or you could hire extra agents, which costs more but keeps callers happy. Queueing theory helps you weigh these options—how many callers will leave, how long others wait, and what extra staff will cost. The same ideas apply to delivery trucks waiting at a depot, parts lined up for assembly in a factory, or patients waiting for appointments. Mastering queues lets you build systems that are efficient, fair, and robust.
+
+## The Healthy Queue: Predictably Boring
+
+When a queue is healthy—when customers arrive at a pace the system can handle—it's predictable. Whether you serve the first customer in line (like a grocery store) or the last one who arrived (like stacking dishes), the average wait time and line length stay steady. The way you organize the queue doesn't change much in this state. The system just works: customers come, get served, and go.
+
+Try it in the simulator below. Adjust how fast customers arrive and how quickly they're served. Keep arrivals slower than service, and you'll see the line stays short and wait times remain low, no matter how the queue is set up.
+
+<Sim />
+
+## When Things Get Interesting
+
+Queueing theory comes alive when the system is stressed. If the coffee shop gets a rush and more customers arrive than the barista can serve, the line grows. Waits get longer, and some people might walk away. Now, how you manage the queue makes a big difference. Serving the first customer in line ensures fairness but might hold up quick orders behind a complicated latte. Serving the newest customer first could work for systems where recent orders are more urgent, but it might leave early customers waiting too long. You could limit the line's length, turning away new customers when it's full, or add another barista, which costs more. Each approach has tradeoffs:
+
+- Limiting the line: Shortens waits for those in line but loses potential customers.
+- Changing who's served first: Decides who waits longer—newcomers or those who've been waiting.
+- Adding staff: Reduces delays but increases costs.
+
+Try the second simulator below to see what happens when the queue gets overloaded. Increase the arrival rate to exceed the service rate, and watch how the line length and wait times grow. Then experiment with limiting the line length to see how it affects the system.
+
+<Sim showControls />
+
+Queueing theory helps you test these options, predict outcomes, and choose the best one for your goals. In the coffee shop, you might prioritize quick orders to serve more customers, or focus on fairness to keep everyone satisfied. The right choice depends on what you value—speed, fairness, or cost.
+
+## What's ahead
+
+This book is about helping you understand queues and choose the best ways to manage them. We'll start with the basics: how queues are built, what to measure, and simple ways to predict their behavior. Then we'll explore how to handle overload, from changing queue rules to adding resources. You'll see how these ideas apply to real systems, like organizing workflows or improving services. Interactive simulators will let you experiment with queues in real time. By the end, you'll know how to analyze a queue, understand its tradeoffs, and select the right strategy for any system you work on.
+
+Ready to dive in? Let's explore the pieces of a queue in the next chapter.

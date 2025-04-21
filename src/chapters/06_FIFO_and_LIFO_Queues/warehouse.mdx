@@ -1,0 +1,83 @@
+Imagine a busy warehouse receiving shipments of electronics and fulfilling customer orders. Boxes arrive, stack up in a storage area, and a single worker picks them to ship out. Should the worker pick the oldest boxes first, ensuring fairness, or the newest ones, which are easier to reach? These choices define two fundamental queue disciplines: FIFO (First-In, First-Out) and LIFO (Last-In, First-Out). In this chapter, we’ll explore FIFO and LIFO queues using the warehouse, learning how they affect wait times and queue behavior. You’ll test the formulas and experiment with a simulator to see when each discipline shines, helping you choose the right strategy for managing queues.
+
+## What Are FIFO and LIFO?
+
+A queue discipline determines the order in which items are served. In the warehouse:
+
+### FIFO (First-In, First-Out)
+
+The worker picks the oldest boxes first, like a line where the first arrival is served first. This ensures fairness, as no box waits too long, and suits systems prioritizing order, like customer orders or perishable goods.
+
+### LIFO (Last-In, First-Out)
+
+The worker picks the newest boxes first, like a stack where the top (most recent) box is taken. This prioritizes recent arrivals, useful when newer items are more relevant, like error logs or accessible inventory.
+
+We’ll model this as an M/M/1 queue with:
+
+- Shipments arriving randomly at a rate of λ (lambda) boxes per minute (e.g., λ = 5 means 5 boxes per minute).
+- The worker fulfilling orders at a rate of μ (mu) boxes per minute (e.g., μ = 6 means 6 boxes per minute).
+- Unlimited queue depth, with no boxes discarded.
+- Non-preemptive service: Once a box is picked, it’s fully processed before the next is chosen.
+
+The queue discipline (FIFO or LIFO) changes how boxes are picked, affecting wait times and system dynamics.
+
+### When to Use FIFO vs. LIFO
+
+- FIFO ensures fairness by minimizing the maximum wait time for any box. It’s ideal for systems where order matters, like fulfilling customer orders in sequence or managing perishable inventory. However, a complex order at the front can delay others.
+- LIFO prioritizes recent arrivals, which suits systems where newer items are more urgent, like processing recent error logs or accessing the top of a stack. It can reduce wait times for new boxes but risks delaying older ones, especially in busy periods.
+
+The choice depends on your goals: fairness and stability (FIFO) or recency and quick access for new items (LIFO).
+
+## Key Formulas
+
+For an M/M/1 queue, steady-state metrics like average wait time and queue length are the same for FIFO and LIFO under identical conditions, as they depend on λ and μ, not the discipline. However, wait time distributions differ: FIFO is more consistent, while LIFO favors newer boxes, potentially leaving older ones waiting longer. Test the formulas below to see how they apply in the warehouse.
+
+### Utilization (ρ)
+
+How busy the worker is, calculated as ρ = λ/μ. For λ = 5, μ = 6, ρ = 5/6 ≈ 0.83 (83% busy). ρ must be less than 1 for stability. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="utilization" /> </div> --> */}
+
+### Average Queue Length (L_q)
+
+The average number of boxes waiting (not being processed):
+
+$$L_q = \frac{\lambda^2}{\mu(\mu - \lambda)}$$
+
+For λ = 5, μ = 6, $$L_q = \frac{5^2}{6(6 - 5)} = \frac{25}{6} \approx 4.17$$ boxes. This holds for both FIFO and LIFO. Test it:
+
+{/* <!-- <div> <FormulaCalculator type="queueLength" /> </div> --> */}
+
+### Average Wait Time in Queue (W_q):
+
+How long a box waits before processing:
+
+$$W_q = \frac{\lambda}{\mu(\mu - \lambda)}$$
+
+With λ = 5, μ = 6, $$W_q = \frac{5}{6(6 - 5)} = \frac{5}{6} \approx 0.83$$ minutes (50 seconds). This is the average for both disciplines, but LIFO may have higher variance. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="waitTime" /> </div> --> */}
+
+These formulas give average metrics, but FIFO ensures more predictable waits, while LIFO benefits newer boxes at the expense of older ones.
+
+## Using the Model
+
+The M/M/1 model helps you manage the warehouse. Suppose shipments arrive at λ = 5 boxes per minute, and the worker processes at μ = 6 boxes per minute:
+
+- Utilization: ρ = 0.83 (stable).
+- Queue length: L_q ≈ 4.17 boxes.
+- Wait time: W_q ≈ 50 seconds.
+
+In FIFO, boxes wait about 50 seconds on average, with older boxes served first, ensuring fairness. In LIFO, newer boxes are processed quickly, but older ones may wait much longer if arrivals are frequent. If λ increases to 5.9, the system nears instability (ρ ≈ 0.98), and wait times spike. In LIFO, older boxes face extreme delays, while FIFO spreads the wait more evenly. You might consider adding workers (M/M/c) or limiting arrivals, but the FIFO vs. LIFO choice hinges on prioritizing fairness or recency.
+
+## Try the Queue in Action
+
+The simulator below lets you explore FIFO and LIFO in the warehouse. Adjust the arrival rate (λ), service rate (μ), and queue discipline to see how they affect wait times and queue length. Try a high λ to stress the system, then switch between FIFO and LIFO to compare. Does LIFO help newer boxes at the expense of older ones? Compare the simulator’s metrics to the formula calculators to understand the tradeoffs.
+
+{/* <!-- <div> <QueueSimulator /> </div> --> */}
+
+## Why This Matters
+
+FIFO and LIFO queues are essential tools for managing systems where processing order matters. In the warehouse, FIFO ensures fair handling of inventory, while LIFO prioritizes recent shipments, each fitting different needs. These disciplines extend to computing—FIFO for task queues, LIFO for stack-based operations like undo functions. By experimenting with the formulas and simulator, you’re learning to choose the right discipline for your goals, whether fairness, recency, or efficiency.
+
+{/* <!-- TODO talk about bounded vs unbounded next --> */}
