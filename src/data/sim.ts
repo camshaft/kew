@@ -178,7 +178,7 @@ export class Pop implements Event {
   }
 
   public apply(model: Model): void {
-    const item = model.queues[this.queue].items.pop(this.value, model.seconds);
+    const item = model.queues[this.queue].items.pop(this.value, model.seconds, true);
     const lifetime = item.lifetime(model.seconds);
     model.lifetimes.record(new m.StatEntry(model.seconds, lifetime, item.id));
   }

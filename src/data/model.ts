@@ -43,11 +43,14 @@ export class Queue {
 export class Items {
   items: Item[] = [];
   public sojournTimes: Stats = new Stats();
+  public pops: Stats = new Stats();
+  currentPops: number = 0;
 
   public clone(): Items {
     const clone = new Items();
     clone.items = this.items.map((i) => i.clone());
     clone.sojournTimes = this.sojournTimes.clone();
+    clone.pops = this.pops.clone();
     return clone;
   }
 
@@ -65,7 +68,7 @@ export class Items {
     this.items.unshift(item);
   }
 
-  public pop(id: number, now: number): Item {
+  public pop(id: number, now: number, isTerminal?: boolean): Item {
     let item = null;
     this.items = this.items.filter((v) => {
       if (v.id !== id) return true;
@@ -80,10 +83,14 @@ export class Items {
 
     this.sojournTimes.record(new StatEntry(now, sojournTime, item.id));
 
+    if (isTerminal) this.currentPops += 1;
+
     return item;
   }
 
   public finish(now: number) {
+    this.pops.record(new StatEntry(now, this.currentPops, 0));
+
     const sojournTimes = this.sojournTimes;
 
     sojournTimes.finish();
