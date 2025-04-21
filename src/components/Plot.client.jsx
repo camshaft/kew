@@ -6,12 +6,12 @@ import { useEffect, useRef } from "react";
 export default function PlotFigure({ className, ...options }) {
   const containerRef = useRef(null);
 
-  className = (className || "").split(/ +/);
+  className = className ? className.split(/ +/) : undefined;
 
   useEffect(() => {
     if (options == null) return;
     const plot = Plot.plot(options);
-    plot.classList.add(...className);
+    if (className) plot.classList.add(...className);
     containerRef.current.append(plot);
     return () => plot.remove();
   }, [options]);

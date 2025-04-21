@@ -1,5 +1,5 @@
-use super::{item::Item, scope, Id};
-use bach::queue::{vec_deque::Discipline, CloseError, PopError, PushError, Pushable, Queue as Q};
+use super::{Id, item::Item, scope};
+use bach::queue::{CloseError, PopError, PushError, Pushable, Queue as Q, vec_deque::Discipline};
 use std::task::Context;
 
 struct PushableItem<'a> {
@@ -10,7 +10,7 @@ struct PushableItem<'a> {
 
 impl Pushable<Item> for PushableItem<'_> {
     fn produce(&mut self) -> Item {
-        let item = self.item.produce();
+        let mut item = self.item.produce();
         match self.disc {
             Discipline::Fifo => item.on_push_back(self.queue),
             Discipline::Lifo => item.on_push_front(self.queue),
@@ -32,9 +32,9 @@ impl<T: Q<Item>> Q<Item> for Queue<T> {
             disc: self.disc,
             item: value,
         };
-        let prev = self.inner.push_lazy(&mut item)?;
+        let mut prev = self.inner.push_lazy(&mut item)?;
 
-        if let Some(item) = prev.as_ref() {
+        if let Some(item) = prev.as_mut() {
             item.on_pop(self.id);
         }
 
@@ -51,9 +51,9 @@ impl<T: Q<Item>> Q<Item> for Queue<T> {
             disc: self.disc,
             item: value,
         };
-        let prev = self.inner.push_with_notify(&mut item, cx)?;
+        let mut prev = self.inner.push_with_notify(&mut item, cx)?;
 
-        if let Some(item) = prev.as_ref() {
+        if let Some(item) = prev.as_mut() {
             item.on_pop(self.id);
         }
 
@@ -61,13 +61,13 @@ impl<T: Q<Item>> Q<Item> for Queue<T> {
     }
 
     fn pop(&mut self) -> Result<Item, PopError> {
-        let item = self.inner.pop()?;
+        let mut item = self.inner.pop()?;
         item.on_pop(self.id);
         Ok(item)
     }
 
     fn pop_with_notify(&mut self, cx: &mut Context) -> Result<Item, PopError> {
-        let item = self.inner.pop_with_notify(cx)?;
+        let mut item = self.inner.pop_with_notify(cx)?;
         item.on_pop(self.id);
         Ok(item)
     }

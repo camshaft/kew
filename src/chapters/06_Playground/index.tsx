@@ -8,7 +8,6 @@ import Player from "@/Player.tsx";
 import Slider from "@/Slider";
 import Toggle from "@/Toggle";
 import { useLocation } from "preact-iso";
-// import pointToPoint from "$/kew.static.js?fn=PointToPoint&queue_capacity=3";
 
 export default function () {
   const location = useLocation();

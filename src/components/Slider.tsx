@@ -3,6 +3,7 @@ import { useId } from "react";
 export interface Props {
   min: number;
   max: number;
+  step?: number;
   value: number;
   onChange: (value: number) => void;
   unit?: string;
@@ -12,6 +13,7 @@ export interface Props {
 export default function Slider({
   min,
   max,
+  step,
   value,
   onChange,
   children,
@@ -34,9 +36,13 @@ export default function Slider({
         type="range"
         min={min}
         max={max}
+        step={step}
         className="col-span-3 h-3 bg-gray-200 rounded-lg cursor-pointer range-lg dark:bg-gray-700 accent-blue-600"
         value={value}
-        onChange={(evt) => onChange(parseInt(evt.target.value))}
+        onChange={(evt) => {
+          const v = parseFloat(evt?.target?.value);
+          if (typeof v == 'number') onChange(v)
+        }}
       />
     </div>
   );
