@@ -1,0 +1,101 @@
+The warehouse is bustling, receiving shipments of electronics and fulfilling customer orders. Boxes arrive, and a single worker processes them for shipping. But space is tight—shelves fill up fast, and you’re cramming boxes into the break room or parking lot to keep up. In theory, you could imagine a warehouse with infinite space, accepting every shipment no matter how many pile up. In practice, nothing is infinite. Every warehouse has a limit, and when it’s full, you must decide: keep squeezing in new shipments, risking overload, or reject them to prioritize what’s already inside? This is the essence of bounded queues. In this chapter, we’ll explore bounded queues using the warehouse, focusing on rejecting new arrivals to avoid chaos. You’ll test the formulas and experiment with a simulator to see how capacity shapes queue behavior, helping you manage space and prevent system collapse.
+
+## What Are Bounded and Unbounded Queues?
+
+A queue’s capacity determines how many items it can hold:
+
+### Bounded Queue
+
+The warehouse has a finite capacity, say K boxes (e.g., K = 10). When full, new shipments are turned away at the gate, prioritizing the boxes already inside. This is the M/M/1/K model, where K limits the queue length (including the box being processed). It reflects reality, as no warehouse has infinite space.
+
+### Unbounded Queue
+
+A theoretical concept where the warehouse accepts all shipments, no matter how many pile up. This is the M/M/1 model from previous chapters, an idealization assuming infinite space. In practice, unbounded queues lead to overload, as shelves, break rooms, and parking lots eventually run out of room.
+
+We’ll model this as:
+
+- Shipments arriving randomly at a rate of λ (lambda) boxes per minute (e.g., λ = 5).
+- The worker processing orders at a rate of μ (mu) boxes per minute (e.g., μ = 6).
+- FIFO discipline, common in warehouses, with bounded queues rejecting new arrivals when full.
+- Non-preemptive service: Once a box is picked, it’s fully processed.
+
+The real question isn’t whether to use an unbounded queue—since infinite space doesn’t exist—but how to set the capacity of a bounded queue to prevent overload while minimizing rejected shipments.
+
+## Why Bounded Queues Matter
+
+Bounded queues are practical because they acknowledge real-world limits. By rejecting new shipments when full, you avoid the chaos of an overloaded warehouse, where boxes spill into every corner, workers can’t move, and delays skyrocket. This comes at a cost: rejected shipments mean lost sales or delayed deliveries. The tradeoff is between preventing system collapse and accepting as many shipments as possible. Bounded queues stabilize wait times and resource use, making them essential for warehouses, network buffers, or task queues where overload can crash the system. The key is choosing the right capacity to balance efficiency and opportunity loss.
+
+## Key Formulas
+
+The M/M/1/K bounded queue accounts for finite capacity K, differing from the theoretical M/M/1 unbounded queue. Using FIFO, we include the probability of rejecting new arrivals (loss probability). Test the formulas below to see how they apply in the warehouse.
+
+### Utilization (ρ)
+
+How busy the worker is, approximated as ρ = λ/μ if λ < μ, but capped by capacity in bounded queues. For λ = 5, μ = 6, ρ ≈ 5/6 ≈ 0.83. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="utilization" /> </div> --> */}
+
+### Probability of Zero Boxes (P_0)
+
+The chance the queue is empty:
+
+$$P_0 = \frac{1 - \frac{\lambda}{\mu}}{1 - \left(\frac{\lambda}{\mu}\right)^{K+1}}$$
+
+For λ = 5, μ = 6, K = 10, $$P_0 = \frac{1 - \frac{5}{6}}{1 - \left(\frac{5}{6}\right)^{11}} \approx 0.159$$. This adjusts for finite capacity. Test it:
+
+{/* <!-- <div> <FormulaCalculator type="zeroQueue" /> </div> --> */}
+
+### Probability of Loss (P_K)
+
+The chance a new shipment is rejected because the queue is full:
+
+$$P_K = \frac{\left(\frac{\lambda}{\mu}\right)^K (1 - \frac{\lambda}{\mu})}{1 - \left(\frac{\lambda}{\mu}\right)^{K+1}}$$
+
+For λ = 5, μ = 6, K = 10, $$P_K \approx 0.056$$, so 5.6% of shipments are turned away. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="lossProbability" /> </div> --> */}
+
+### Average Queue Length (L_q)
+
+The average number of boxes waiting (not being processed):
+
+$$L_q = \frac{\frac{\lambda}{\mu} \left[ 1 - \frac{\lambda}{\mu} - K \left(\frac{\lambda}{\mu}\right)^K + (K-1) \left(\frac{\lambda}{\mu}\right)^{K+1} \right]}{(1 - \frac{\lambda}{\mu}) \left[ 1 - \left(\frac{\lambda}{\mu}\right)^{K+1} \right]}$$
+
+For λ = 5, μ = 6, K = 10, L_q ≈ 3.5 boxes, less than the unbounded M/M/1 (4.17) due to rejections. Test it:
+
+{/* <!-- <div> <FormulaCalculator type="queueLength" /> </div> --> */}
+
+### Average Wait Time in Queue (W_q)
+
+Wait time for accepted boxes:
+
+$$W_q = \frac{L_q}{\lambda (1 - P_K)}$$
+
+With the same numbers, W_q ≈ 0.74 minutes (44 seconds), shorter than M/M/1 (50 seconds) because rejections reduce the queue. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="waitTime" /> </div> --> */}
+
+Bounded queues prevent overload by rejecting excess arrivals, stabilizing the system at the cost of lost shipments.
+
+## Using the Model
+
+The M/M/1/K model helps you manage the warehouse’s finite space. Suppose shipments arrive at λ = 5 boxes per minute, the worker processes at μ = 6 boxes per minute, and capacity is K = 10:
+
+- Utilization: ρ ≈ 0.83 (stable).
+- Loss probability: P_K ≈ 5.6% (5.6% of shipments rejected).
+- Queue length: L_q ≈ 3.5 boxes.
+- Wait time: W_q ≈ 44 seconds.
+
+In a theoretical unbounded queue (M/M/1), L_q ≈ 4.17 and W_q ≈ 50 seconds, but the warehouse would overflow, with boxes piling up in the break room or parking lot, leading to chaos. The bounded queue keeps space under control by rejecting 5.6% of shipments, avoiding overload but losing potential sales. If λ spikes to 10, P_K jumps (e.g., ~30% for K = 10), rejecting many shipments. You could increase K, add workers (M/M/c), or use rotation strategies (next chapter) to handle overflow without rejecting as much.
+
+## Try the Queue in Action
+
+The simulator below lets you explore bounded and unbounded queues in the warehouse. Adjust the arrival rate (λ), service rate (μ), and queue capacity (K) to see how they affect queue length, wait time, and loss probability. Try a high λ with a small K to see rejections soar, then switch to an unbounded queue (K = ∞) to observe potential overload. How does capacity prevent chaos, and at what cost? Compare the simulator’s metrics to the formula calculators to understand the tradeoffs.
+
+{/* <!-- <div> <QueueSimulator /> </div> --> */}
+
+## Why This Matters
+
+In practice, every system has limits—there’s no such thing as a truly unbounded queue. Bounded queues, like those in the warehouse, prevent overload by rejecting new shipments when full, prioritizing existing inventory to keep the system stable. This comes at the cost of lost opportunities, making capacity a critical design choice. These concepts are vital for warehouses, network buffers, or task queues, where unchecked growth can crash the system. By experimenting with the formulas and simulator, you’re learning to set boundaries that balance efficiency and throughput, preparing you to explore rotation strategies for managing overflow without rejecting as much.
+
+Next, we’ll explore how to rotate items out of bounded queues to make room for new arrivals, using the warehouse to show how to manage overflow without losing too much.

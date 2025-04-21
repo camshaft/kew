@@ -1,0 +1,70 @@
+In a hospital emergency room, not all patients are equal. A person with a life-threatening injury needs immediate attention, while someone with a minor issue can wait. This is where priority queues come in, allowing critical cases to jump ahead of less urgent ones. Unlike the coffee shop, where baristas served customers in order of arrival, hospitals prioritize based on need. In this chapter, we’ll explore priority queues using a hospital setting, focusing on a model with two priority levels—critical and non-critical patients. You’ll learn how prioritization affects wait times, test the formulas, and experiment with a simulator to balance speed for critical cases against fairness for others.
+
+## What is a Priority Queue?
+
+A priority queue assigns importance levels to items (here, patients) and serves higher-priority items first. In the hospital, we’ll use an M/M/1 priority queue with two classes:
+
+- High-priority patients (e.g., critical injuries) arrive randomly at a rate of λ₁ (lambda-1) patients per minute (e.g., λ₁ = 2 means 2 critical patients per minute).
+- Low-priority patients (e.g., minor injuries) arrive randomly at a rate of λ₂ (lambda-2) patients per minute (e.g., λ₂ = 3 means 3 non-critical patients per minute).
+- A single doctor (one server) treats patients at a rate of μ (mu) patients per minute (e.g., μ = 6 means 6 patients per minute).
+- The queue uses preemptive priority: if a critical patient arrives while a non-critical patient is being treated, the doctor switches to the critical patient immediately (the non-critical patient returns to the queue).
+
+This model assumes unlimited queue depth and no patients leave. High-priority patients always go first, which reduces their wait times but can delay low-priority ones.
+
+## How Priority Affects Wait Times
+
+Priority queues trade off wait times between classes. Critical patients get faster service, but non-critical patients may wait longer, especially if critical arrivals are frequent. The total arrival rate is λ = λ₁ + λ₂, and the system is stable if λ < μ. The key challenge is balancing quick treatment for critical cases with reasonable waits for others.
+
+## Key Formulas
+
+The M/M/1 priority queue model provides formulas to predict wait times for each priority class. Test them below by adjusting λ₁, λ₂, and μ to see how they work in the hospital.
+
+### Utilization (ρ)
+
+How busy the doctor is, calculated as ρ = (λ₁ + λ₂)/μ. For λ₁ = 2, λ₂ = 3, μ = 6, ρ = (2 + 3)/6 = 0.83 (83% busy). ρ must be less than 1 for stability. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="utilization" /> </div> --> */}
+
+### Average Wait Time for High-Priority Patients (W_q₁)
+
+How long critical patients wait before treatment:
+
+$$W_{q1} = \frac{\lambda_1 + \lambda_2}{\mu(\mu - \lambda_1 - \lambda_2)}$$
+
+For λ₁ = 2, λ₂ = 3, μ = 6, $$W_{q1} = \frac{2 + 3}{6(6 - 2 - 3)} = \frac{5}{6} \approx 0.83$$ minutes (50 seconds). High-priority patients wait less because they jump the queue. Test it:
+
+{/* <!-- <div> <FormulaCalculator type="highPriorityWaitTime" /> </div> --> */}
+
+### Average Wait Time for Low-Priority Patients (W_q₂):
+
+How long non-critical patients wait:
+
+$$W_{q2} = \frac{\lambda_1 + \lambda_2}{\mu(\mu - \lambda_1 - \lambda_2)} \cdot \frac{\mu}{\mu - \lambda_1}$$
+
+Using the same numbers, $$W_{q2} = \frac{5}{6(6 - 2 - 3)} \cdot \frac{6}{6 - 2} = \frac{5}{6} \cdot \frac{6}{4} = 1.25$$ minutes (75 seconds). Low-priority patients wait longer due to preemption. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="lowPriorityWaitTime" /> </div> --> */}
+
+These formulas show how prioritization favors critical patients but increases delays for non-critical ones, especially as λ₁ grows.
+
+## Using the Model
+
+The priority queue model helps you manage the hospital’s emergency room. Suppose critical patients arrive at λ₁ = 2 per minute and non-critical at λ₂ = 3 per minute, with the doctor treating at μ = 6 per minute. The formulas predict:
+
+- Critical patients wait about 50 seconds.
+- Non-critical patients wait about 75 seconds.
+- Utilization is 83%, so the system is stable.
+
+If critical arrivals increase to λ₁ = 4, the system nears instability (ρ = (4 + 3)/6 ≈ 1.17), and low-priority waits skyrocket because critical patients dominate. You might consider adding doctors (an M/M/c priority queue) or limiting non-critical admissions, but these formulas help you quantify the tradeoffs.
+
+## Try the Queue in Action
+
+The simulator below lets you explore the M/M/1 priority queue. Adjust the arrival rates for critical (λ₁) and non-critical (λ₂) patients, and the doctor’s service rate (μ), to see how they affect wait times for each group. Try a high λ₁ to see critical patients get fast service while non-critical ones wait longer. Compare the simulator’s metrics to the formula calculators. How do you balance quick treatment for critical cases with fairness for others?
+
+{/* <!-- <div> <QueueSimulator /> </div> --> */}
+
+## Why This Matters
+
+Priority queues are powerful for systems where some tasks are more urgent, like in a hospital. The M/M/1 priority model shows how to prioritize critical patients while understanding the impact on non-critical ones. In the emergency room, you might use these predictions to allocate doctors, set triage rules, or manage patient expectations. By experimenting with the formulas and simulator, you’re learning to design queues that balance urgency and fairness, preparing you for more complex systems where queues connect in networks.
+
+{/* <!-- TODO include transition to FIFO vs LIFO --> */}

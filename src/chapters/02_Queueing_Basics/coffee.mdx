@@ -1,0 +1,55 @@
+Let's return to the coffee shop. Customers line up, order their drinks, and wait for the barista to serve them. Sometimes the line moves quickly; other times, it backs up. To understand why, we need to break down how a queue works. A queue isn't just a line—it's a system with specific parts that determine how it behaves. By learning these parts and what to measure, you'll start to see why some queues feel smooth and others turn chaotic, especially when the shop gets busy. This chapter covers the building blocks of queues and introduces the key numbers to track, setting you up to manage them effectively.
+
+## The Parts of a Queue
+
+Every queue has four main components, and the coffee shop shows them in action:
+
+### Arrivals
+
+How customers show up. On a quiet morning, a few customers trickle in every few minutes. During a rush, they pour in faster. The rate at which customers arrive—called the arrival rate, denoted $$\lambda$$ (lambda)—shapes how busy the queue gets.
+
+### Service
+
+How the barista handles orders. Some drinks, like a black coffee, are quick; others, like a custom latte, take longer. The rate at which the barista completes orders—called the service rate, denoted $$\mu$$ (mu)—determines how fast the line moves.
+
+### Queue Discipline
+
+The order in which customers are served. The coffee shop might serve the first customer in line (first-in, first-out, or <FIFO />), like a fair grocery checkout. Or it could serve the last customer who arrived (last-in, first-out, or <LIFO />), like stacking orders and picking the newest one. The discipline affects who waits longest.
+
+### Queue Depth
+
+How many customers can wait in line. If the shop only has space for 10 people, new customers are turned away when the line is full. A limited queue depth keeps the line manageable but might lose business.
+
+These parts work together. If customers arrive faster than the barista can serve ($$\lambda > \mu$$), the line grows. If the queue depth is limited, some customers leave. The discipline decides who gets served first, impacting wait times. Understanding these components lets you predict and control the queue's behavior.
+
+## Measuring the Queue
+
+To manage a queue, you need to know how it's performing. Three key metrics tell the story:
+
+### Wait Time
+
+How long a customer stands in line before being served. In a healthy queue, waits are short—maybe a minute or two. During a rush, they can stretch to 10 minutes or more.
+
+### Queue Length
+
+How many customers are waiting. A short line (say, 2-3 people) means the system is coping. A long line (10 or more) signals trouble.
+
+### Utilization
+
+How busy the barista is. If the barista is serving non-stop, utilization is high, leaving no room for error. If they're idle half the time, utilization is low, but you're paying for unused capacity. Utilization is the ratio of arrival rate to service rate ($$\lambda / \mu$$).
+
+These metrics help you spot problems and test solutions. For example, if wait times are too long, you might add a second barista to increase the service rate. If the queue length keeps hitting the shop's limit, you might rethink the queue depth or discipline.
+
+## Experimenting with the Queue
+
+The coffee shop's queue changes based on how you set it up. A <FIFO /> discipline feels fair but might slow down quick orders stuck behind a complex one. A <LIFO /> discipline prioritizes new customers, which could make sense if newer orders are simpler, but it risks frustrating those who've waited longest. A limited queue depth prevents the line from overwhelming the shop but turns away customers when it's full.
+
+Try the simulator below to see how these choices play out. Adjust the arrival and service rates to create a busy queue, then switch between <FIFO /> and <LIFO /> or limit the queue depth. Watch how wait times and queue length change, and notice the tradeoffs—does one discipline keep waits shorter? Does limiting the line help or hurt?
+
+{/* <!-- <div> <QueueSimulator /> </div> --> */}
+
+## Why This Matters
+
+Knowing the parts of a queue and what to measure gives you a foundation for managing it. In the coffee shop, you might choose a <FIFO /> discipline to keep things fair, but if quick orders pile up, <LIFO /> could speed things up. A limited queue depth might work on busy days to avoid chaos, but you'll need to balance lost customers against shorter waits. These decisions depend on what you value—speed for customers, fairness, or keeping costs low. Queueing theory helps you make these choices deliberately, using data from wait times, queue length, and utilization.
+
+In the next chapter, we'll dive into simple models to predict queue behavior, so you can test strategies before the coffee shop gets slammed.

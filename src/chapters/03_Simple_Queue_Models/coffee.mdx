@@ -1,0 +1,78 @@
+Back at the coffee shop, you've seen how queues work: customers arrive, wait in line, and get served by the barista. You understand the parts—arrivals, service, queue discipline, and queue depth—and what to measure, like wait time and queue length. Now, how do you predict what will happen before the shop gets busy? Queue models are the answer. These mathematical tools describe a queue, letting you calculate wait times, line lengths, and more, so you can test strategies without waiting for a rush. In this chapter, we'll explore the simplest model, called M/M/1, and use it to understand the coffee shop's queue. You'll also get to play with the formulas to see how the numbers change, building intuition for smarter queue management.
+
+## What is the M/M/1 Model?
+
+The M/M/1 model describes a basic queue with one barista (a single server), where customers arrive and are served in a predictable way. The “M” stands for “Markovian,” meaning arrivals and service times follow a random but consistent pattern. In the coffee shop:
+
+- Customers arrive randomly, at an average rate of $$\lambda$$ customers per minute. For example, $$\lambda = 5$$ means 5 customers arrive per minute on average.
+- The barista serves customers randomly, at an average rate of $$\mu$$ customers per minute. If $$\mu = 6$$, the barista completes 6 orders per minute on average.
+- The $$1$$ means one barista, with a first-in, first-out (<FIFO />) queue, so the first customer in line is served next.
+
+This model assumes an unlimited queue depth—customers can line up as long as needed—and no one leaves if the line is long. It's a foundation for understanding how arrival and service rates drive queue behavior.
+
+## Key Formulas
+
+The M/M/1 model provides formulas to predict the queue's performance. Below, you can try each one by adjusting $$\lambda$$ and $$\mu$$ to see how the results change in the coffee shop.
+
+### Utilization ($$\rho$$)
+
+How busy the barista is, calculated as:
+
+$$\rho = \frac{\lambda}{\mu}$$.
+
+If $$\lambda = 5$$ and $$\mu = 6$$, then $$\rho = \frac{5}{6} \approx 0.83$$, meaning the barista is busy 83% of the time. If $$\rho \geq 1$$, the queue grows endlessly because arrivals outpace service. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="utilization" /> </div> --> */}
+
+### Average Queue Length ($$L_q$$)
+
+The average number of customers waiting (not including the one being served). The formula is:
+
+$$L_q = \frac{\lambda ^ 2}{\mu(\mu - \lambda)}$$
+
+For $$\lambda = 5$$, $$\mu = 6$$, $$L_q = \frac{5^2}{6(6 - 5)} = \frac{25}{6} \approx 4.17$$ boxes. Test it:
+
+{/* <!-- <div> <FormulaCalculator type="queueLength" /> </div> --> */}
+
+### Average Wait Time in Queue ($$W_q$$)
+
+How long a box waits before processing:
+
+$$W_q = \frac{\lambda}{\mu(\mu - \lambda)}$$
+
+With $$\lambda = 5$$, $$\mu = 6$$, $$W_q = \frac{5}{6(6 - 5)} = \frac{5}{6} \approx 0.83$$ minutes (50 seconds). Try it:
+
+{/* <!-- <div> <FormulaCalculator type="waitTime" /> </div> --> */}
+
+### Average Time in System ($$W$$)
+
+The total time a customer spends in the shop (waiting plus service):
+
+$$W = W_q + \frac{1}{\mu}$$
+
+Here, $$W = 0.83 + \frac{1}{6} \approx 1$$ minute, since service takes $$\frac{1}{\mu} = \frac{1}{6} \approx 0.17$$ minutes. Try it yourself:
+
+{/* <!-- <div> <FormulaCalculator type="systemTime" /> </div> --> */}
+
+These formulas show why a healthy queue ($$\lambda \lt \mu$$) keeps wait times and queue lengths manageable. When $$\lambda$$ approaches $$\mu$$, the numbers spike, signaling trouble.
+
+## Using the Model
+
+The M/M/1 model helps you plan for the coffee shop. If you expect 5 customers per minute ($$\lambda = 5$$) and the barista serves 6 per minute ($$\mu = 6$$), the formulas predict customers wait about 50 seconds, with a line of around 4 people. But if a rush pushes $$\lambda$$ to 5.9, things get messy:
+
+- Queue length: $$L_q = \frac{5.9^2}{6(6 - 5.9)} \approx 64.4$$, or 64 customers waiting.
+- Wait time: $$W_q = \frac{5.9}{6(6 - 5.9)} \approx 10.9$$, a long delay.
+
+This shows why managing overload is critical. You could hire another barista (moving to an M/M/2 model, covered later), limit the queue depth, or tweak the discipline. The M/M/1 model lets you test these ideas with numbers.
+
+## Try the Queue in Action
+
+The simulator below brings the M/M/1 model to life. Adjust the arrival rate ($$\lambda$$) and service rate ($$\mu$$) to see how they affect queue length and wait time over time. Start with a healthy queue ($$\lambda \lt \mu$$), then push $$\lambda$$ close to $$\mu$$ to see the queue struggle. How do the results compare to the formula calculators? This is your chance to explore the coffee shop's queue and build intuition.
+
+{/* <!-- <div> <QueueSimulator /> </div> --> */}
+
+## Why This Matters
+
+The M/M/1 model is a starting point for understanding queues. It reveals how sensitive a queue is to changes in arrival or service rates, especially near capacity. In the coffee shop, you might use these predictions to train the barista to work faster (increase $$\mu$$), cap the line to avoid chaos, or plan for busy periods. The model helps you weigh tradeoffs—shorter waits versus higher costs, or fairness versus speed—before the rush hits. By playing with the formulas and simulator, you're learning to think like a queue manager, ready to tackle more complex systems.
+
+Next, we'll explore queues with multiple baristas to handle bigger crowds in the coffee shop.

@@ -1,0 +1,92 @@
+The coffee shop is buzzing with activity. With just one barista, a rush of customers leads to long lines, especially when someone orders a complex latte that slows everything down. You've used the M/M/1 model to predict wait times and queue lengths for a single barista, but adding more baristas could handle bigger crowds. How much does it help, and what are the tradeoffs? The M/M/c model describes queues with multiple baristas, letting you analyze the coffee shop with two or three working at once. In this chapter, we'll explore how multiple baristas improve the queue, tackle delays from complex orders, and let you experiment with the numbers to balance staffing costs and customer wait times.
+
+## What Is the M/M/c Model?
+
+The M/M/c model extends the M/M/1 model to handle multiple baristas—c servers working simultaneously. It assumes:
+
+- Customers arrive randomly at an average rate of $$\lambda$$ (lambda) customers per minute (e.g., $$\lambda = 10$$ means 10 customers per minute).
+- Each barista serves customers randomly at an average rate of $$\mu$$ (mu) customers per minute (e.g., $$\mu = 6$$ means 6 orders per minute).
+- The queue is first-in, first-out (FIFO), with unlimited queue depth, and customers don't leave if the line is long.
+
+The $$c$$ represents the number of baristas. With $$c = 2$$, two baristas serve customers at the same time, doubling the shop's capacity compared to M/M/1 ($$c = 1$$). Customers join a single line and are served by the next available barista, keeping the process efficient.
+
+## Key Formulas
+
+The M/M/c model provides formulas to predict queue performance with multiple baristas. These are more complex than M/M/1, but you can test them below by adjusting $$\lambda$$, $$\mu$$, and the number of baristas to see how they work in the coffee shop.
+
+### Utilization ($$\rho$$)
+
+How busy the baristas are, calculated as:
+
+$$\rho = \frac{\lambda}{c\mu}$$.
+
+For $$\lambda = 10$$, $$\mu = 6$$, and $$c = 2$$, $$\rho = \frac{10}{2 \times 6} = 0.83$$, meaning baristas are busy 83% of the time. For stability, $$\rho$$ must be less than 1. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="utilization" /> </div> --> */}
+
+### Probability of Zero Customers in Queue ($$P_0$$)
+
+The chance no customers are waiting (though some may be served). This is a stepping stone for other metrics:
+
+$$P_0 = \left[ \sum_{n=0}^{c-1} \frac{(c\rho)^n}{n!} + \frac{(c\rho)^c}{c!(1 - \rho)} \right]^{-1}$$
+
+Test how $$P_0$$ changes:
+
+{/* <!-- <div> <FormulaCalculator type="zeroQueue" /> </div> --> */}
+
+### Average Queue Length ($$L_q$$)
+
+The average number of customers waiting (not being served):
+
+$$
+L_q = \frac{(c\rho)^c \rho}{c!(1 - \rho)^2} P_0
+$$
+
+For $$\lambda = 10$$, $$\mu = 6$$, $$c = 2$$, $$L_q$$ is smaller than M/M/1 because two baristas clear the line faster. Try it:
+
+{/* <!-- <div> <FormulaCalculator type="queueLength" /> </div> --> */}
+
+### Average Wait Time in Queue ($$W_q$$):
+
+How long a customer waits before a barista serves them:
+
+$$W_q = \frac{L_q}{\lambda}$$
+
+With these numbers, $$W_q$$ is shorter than M/M/1 thanks to multiple baristas. See the difference:
+
+{/* <!-- <div> <FormulaCalculator type="waitTime" /> </div> --> */}
+
+These formulas show how extra baristas reduce wait times, especially when complex orders cause delays.
+
+## Using the Model
+
+The M/M/c model helps you optimize the coffee shop. Suppose you expect 10 customers per minute ($$\lambda = 10$$), and each barista serves 6 per minute ($$\mu = 6$$). With one barista (M/M/1):
+
+- Utilization: ρ = 10/6 ≈ 1.67 (unstable, ρ > 1).
+- Queue length and wait time: Practically infinite.
+
+With two baristas (c = 2):
+
+- Utilization: $$ρ = 10/(2 \times 6) = 0.83$$ (stable).
+- Queue length: $$L_q \approx 2.8$$ customers.
+- Wait time: $$W_q \approx 16.8$$ seconds.
+
+Adding a third barista (c = 3) reduces L_q and W_q further, but the improvement diminishes, and staffing costs increase. The model helps you decide if adding baristas is worth it or if other strategies, like limiting queue depth, are better.
+
+## Tackling Head-of-Line Blocking
+
+One major advantage of multiple baristas is reducing head-of-line blocking, where a complex order at the front of the queue delays everyone behind it. Picture a customer ordering a custom latte with extra foam and a specific temperature—it takes the barista several minutes. In a single-barista (M/M/1) queue, everyone else waits, even if the next customer just wants a quick black coffee. This bottleneck frustrates customers and lengthens the line.
+
+With multiple baristas (M/M/c), the queue moves faster because others can serve simpler orders in parallel. While one barista works on the complex latte, another can whip up that black coffee or a quick espresso. This parallel processing means simpler orders don't get stuck, reducing overall wait times and clearing the queue more efficiently. The more baristas you have, the less a single complex order disrupts the system, as others keep the line moving.
+
+## Try the Queue in Action
+
+The simulator below lets you explore the M/M/c model. Adjust the arrival rate ($$\lambda$$), service rate ($$\mu$$), and number of baristas (c) to see how they affect queue length and wait time. Try a busy queue with a high $$\lambda$$, then add baristas to reduce head-of-line blocking. Compare the simulator's metrics to the formula calculators. How many baristas keep the coffee shop running smoothly without overstaffing?
+
+{/* <!-- <div> <QueueSimulator /> </div> --> */}
+
+## Why This Matters
+
+The M/M/c model shows how multiple baristas improve queue performance by handling more customers and reducing delays from complex orders. It's especially useful for managing head-of-line blocking, where parallel service keeps simpler orders moving. In the coffee shop, you might use these predictions to schedule baristas for peak hours, balancing customer satisfaction against payroll costs. By experimenting with the formulas and simulator, you're learning to optimize queues for efficiency, preparing you for scenarios where some customers need faster service.
+
+Next, we'll explore queues where VIP customers get served first, using a hospital to show how priority changes the system.

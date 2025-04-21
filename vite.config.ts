@@ -8,6 +8,9 @@ import StaticCrate from "./plugins/static-crate.ts";
 import remarkGfm from "remark-gfm";
 import { visualizer } from "rollup-plugin-visualizer";
 import preact from "@preact/preset-vite";
+import remarkMath from "remark-math";
+import remarkMdxEnhanced from "remark-mdx-math-enhanced";
+import rehypeKatex from "rehype-katex";
 
 const isProd = process.env.NODE_ENV == "production";
 
@@ -19,7 +22,15 @@ export default defineConfig({
     topLevelAwait(),
     Pages(),
     tailwindcss(),
-    mdx({ jsx: false, remarkPlugins: [[remarkGfm, {}]] }),
+    mdx({
+      jsx: false,
+      rehypePlugins: [rehypeKatex],
+      remarkPlugins: [
+        remarkMath,
+        [remarkMdxEnhanced, { component: "Math" }],
+        [remarkGfm, {}],
+      ],
+    }),
     preact(),
     visualizer({
       filename: "target/build-stats.html",
