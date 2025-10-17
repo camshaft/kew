@@ -3,7 +3,7 @@ members = ["crates/*"]
 resolver = "3"
 
 [workspace.dependencies]
-bach = { version = "0.0.12" }
+bach = { version = "0.1.1" }
 base = { path = "crates/base" }
 wasm-bindgen = { version = "=0.2.100" }
 
